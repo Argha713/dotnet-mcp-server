@@ -21,6 +21,11 @@
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
+  <!-- Argha - 2026-02-17 - expose internals to test project for unit testing -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="McpServer.Tests" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

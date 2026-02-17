@@ -16,6 +16,8 @@ public class McpServerHandler
     private readonly ServerSettings _serverSettings;
     private readonly ILogger<McpServerHandler> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
+    // Argha - 2026-02-17 - initialization gate: reject tool calls before handshake completes (MCP spec)
+    private bool _initialized;
 
     public McpServerHandler(
         IEnumerable<ITool> tools,
@@ -78,7 +80,8 @@ public class McpServerHandler
         _logger.LogInformation("MCP Server shutting down...");
     }
 
-    private async Task<JsonRpcResponse?> ProcessMessageAsync(string message, CancellationToken cancellationToken)
+    // Argha - 2026-02-17 - changed from private to internal for unit test access via InternalsVisibleTo
+    internal async Task<JsonRpcResponse?> ProcessMessageAsync(string message, CancellationToken cancellationToken)
     {
         JsonRpcRequest? request;
         
@@ -117,6 +120,21 @@ public class McpServerHandler
             return null;
         }
 
+        // Argha - 2026-02-17 - reject tool operations before initialize handshake (MCP spec compliance)
+        if (!_initialized && request.Method != "initialize" && request.Method != "ping"
+            && request.Method != "notifications/initialized")
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError
+                {
+                    Code = JsonRpcErrorCodes.InvalidRequest,
+                    Message = "Server not initialized. Send 'initialize' request first."
+                }
+            };
+        }
+
         return request.Method switch
         {
             "initialize" => HandleInitialize(request),
@@ -138,6 +156,7 @@ public class McpServerHandler
     private JsonRpcResponse HandleInitialize(JsonRpcRequest request)
     {
         _logger.LogInformation("Initialize request received");
+        _initialized = true;
 
         InitializeParams? initParams = null;
         if (request.Params.HasValue)

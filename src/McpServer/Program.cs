@@ -51,6 +51,9 @@ services.AddSingleton<McpServerHandler>();
 // Build service provider
 var serviceProvider = services.BuildServiceProvider();
 
+// Argha - 2026-02-17 - validate configuration on startup and warn about issues
+ValidateConfiguration(configuration, serviceProvider.GetRequiredService<ILogger<McpServerHandler>>());
+
 // Run the server
 var server = serviceProvider.GetRequiredService<McpServerHandler>();
 var cts = new CancellationTokenSource();
@@ -62,3 +65,47 @@ Console.CancelKeyPress += (_, e) =>
 };
 
 await server.RunAsync(cts.Token);
+
+// Argha - 2026-02-17 - startup config validation: warn about misconfigured paths, connections, hosts
+static void ValidateConfiguration(IConfiguration configuration, ILogger logger)
+{
+    // Validate FileSystem AllowedPaths
+    var allowedPaths = configuration.GetSection("FileSystem:AllowedPaths").Get<List<string>>() ?? new();
+    if (allowedPaths.Count == 0)
+    {
+        logger.LogWarning("No FileSystem:AllowedPaths configured. FileSystem tool will not be able to access any directories.");
+    }
+    else
+    {
+        foreach (var path in allowedPaths)
+        {
+            if (!Directory.Exists(path))
+                logger.LogWarning("FileSystem AllowedPath does not exist: {Path}", path);
+        }
+    }
+
+    // Validate SQL connections
+    var sqlSection = configuration.GetSection("Sql:Connections");
+    var sqlConnections = sqlSection.GetChildren().ToList();
+    foreach (var conn in sqlConnections)
+    {
+        var connStr = conn["ConnectionString"];
+        if (string.IsNullOrWhiteSpace(connStr))
+            logger.LogWarning("SQL connection '{Name}' has an empty ConnectionString.", conn.Key);
+    }
+
+    // Validate HTTP AllowedHosts
+    var allowedHosts = configuration.GetSection("Http:AllowedHosts").Get<List<string>>() ?? new();
+    if (allowedHosts.Count == 0)
+    {
+        logger.LogWarning("No Http:AllowedHosts configured. HTTP tool will not be able to make any requests.");
+    }
+    else
+    {
+        foreach (var host in allowedHosts)
+        {
+            if (host.Contains("://") || host.Contains('/') || host.Contains(' '))
+                logger.LogWarning("Http AllowedHost '{Host}' looks malformed. Use hostname only (e.g., 'api.github.com'), not a full URL.", host);
+        }
+    }
+}

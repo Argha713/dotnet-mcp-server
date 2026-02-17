@@ -253,14 +253,20 @@ public class FileSystemTool : ITool
         return Path.GetFullPath(Path.Combine(basePath, path));
     }
 
+    // Argha - 2026-02-17 - fixed path traversal: append trailing separator to prevent C:\AllowedPathEvil matching C:\AllowedPath
     private void ValidatePath(string fullPath)
     {
         var normalizedPath = Path.GetFullPath(fullPath);
-        
+
         var isAllowed = _settings.AllowedPaths.Any(allowed =>
         {
             var normalizedAllowed = Path.GetFullPath(allowed);
-            return normalizedPath.StartsWith(normalizedAllowed, StringComparison.OrdinalIgnoreCase);
+            // Ensure trailing separator so "C:\Projects" won't match "C:\ProjectsEvil"
+            if (!normalizedAllowed.EndsWith(Path.DirectorySeparatorChar))
+                normalizedAllowed += Path.DirectorySeparatorChar;
+
+            return normalizedPath.StartsWith(normalizedAllowed, StringComparison.OrdinalIgnoreCase)
+                || normalizedPath.Equals(Path.GetFullPath(allowed), StringComparison.OrdinalIgnoreCase);
         });
 
         if (!isAllowed)

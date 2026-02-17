@@ -1,8 +1,8 @@
 # 🔌 dotnet-mcp-server
 
-A **Model Context Protocol (MCP)** server built with **.NET 8** that exposes enterprise tools to AI assistants like Claude Desktop.
+A **Model Context Protocol (MCP)** server built with **.NET 8** that exposes enterprise tools to AI assistants like Claude Desktop, VS Code (Copilot/Continue/Cline), Cursor, Windsurf, and more.
 
-> MCP is Anthropic's open protocol that lets AI assistants connect to external data sources and tools. This project brings MCP to the .NET ecosystem.
+> MCP is Anthropic's open protocol that lets AI assistants connect to external data sources and tools. This project brings MCP to the .NET ecosystem. It works with **any MCP-compatible client** — not just Claude Desktop.
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat&logo=dotnet)
 ![C#](https://img.shields.io/badge/C%23-12-239120?style=flat&logo=csharp)
@@ -48,7 +48,7 @@ This server provides four enterprise-ready tools:
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Claude Desktop](https://claude.ai/download) (for testing)
+- Any MCP client (see [Supported Clients](#supported-clients) below)
 
 ### 1. Clone and Build
 
@@ -87,9 +87,23 @@ Edit `src/McpServer/appsettings.json`:
 }
 ```
 
-### 3. Connect to Claude Desktop
+### 3. Connect to Your MCP Client
 
-Add to your Claude Desktop config (`%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+Pick your client below and follow the setup instructions.
+
+---
+
+## Supported Clients
+
+### Claude Desktop
+
+**Config file location:**
+| OS | Path |
+|----|------|
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+
+**Add this to the config file:**
 
 ```json
 {
@@ -102,21 +116,199 @@ Add to your Claude Desktop config (`%APPDATA%\Claude\claude_desktop_config.json`
 }
 ```
 
-Or use the published executable:
+Restart Claude Desktop. You should see the tools available in the chat.
+
+---
+
+### VS Code — GitHub Copilot (Built-in)
+
+VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension needed — just VS Code 1.99+ with Copilot enabled.
+
+**Step 1:** Open your project in VS Code.
+
+**Step 2:** Create a `.vscode/mcp.json` file in your workspace root:
 
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "dotnet-mcp-server": {
-      "command": "C:\\path\\to\\dotnet-mcp-server.exe"
+      "command": "dotnet",
+      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
     }
   }
 }
 ```
 
-### 4. Restart Claude Desktop
+**Step 3:** Open the **Copilot Chat** panel (`Ctrl+Shift+I` or `Cmd+Shift+I`).
 
-Close and reopen Claude Desktop. You should see the tools available!
+**Step 4:** Switch to **Agent mode** (click the dropdown at the top of the chat panel and select "Agent").
+
+**Step 5:** You should see the MCP tools listed. Ask Copilot questions like *"What time is it in Tokyo?"* or *"List files in my Documents folder"*.
+
+> **Tip:** You can also add the server globally via VS Code settings (`settings.json`):
+> ```json
+> {
+>   "mcp": {
+>     "servers": {
+>       "dotnet-mcp-server": {
+>         "command": "dotnet",
+>         "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+>       }
+>     }
+>   }
+> }
+> ```
+
+---
+
+### VS Code — Continue.dev (Open Source)
+
+[Continue](https://continue.dev) is a free, open-source AI coding assistant for VS Code and JetBrains.
+
+**Step 1:** Install the **Continue** extension from VS Code Marketplace.
+
+**Step 2:** Open Continue config: press `Ctrl+Shift+P` → type `Continue: Open Config` → select it.
+
+**Step 3:** This opens `~/.continue/config.json`. Add the MCP server under `mcpServers`:
+
+```json
+{
+  "mcpServers": [
+    {
+      "name": "dotnet-mcp-server",
+      "command": "dotnet",
+      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+    }
+  ]
+}
+```
+
+**Step 4:** Reload VS Code (`Ctrl+Shift+P` → `Developer: Reload Window`).
+
+**Step 5:** Open Continue chat panel. The tools will be available in agent mode.
+
+---
+
+### VS Code — Cline (Open Source)
+
+[Cline](https://github.com/cline/cline) is a free, open-source autonomous AI coding agent for VS Code.
+
+**Step 1:** Install the **Cline** extension from VS Code Marketplace.
+
+**Step 2:** Open Cline settings: click the Cline icon in the sidebar → click the **gear icon** → go to **MCP Servers**.
+
+**Step 3:** Click **"Edit MCP Settings"** which opens `~/Documents/Cline/cline_mcp_settings.json`. Add:
+
+```json
+{
+  "mcpServers": {
+    "dotnet-mcp-server": {
+      "command": "dotnet",
+      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+    }
+  }
+}
+```
+
+**Step 4:** Restart Cline. The tools should appear in the MCP Servers section.
+
+---
+
+### Cursor
+
+[Cursor](https://cursor.com) is an AI-first code editor with built-in MCP support.
+
+**Step 1:** Open Cursor Settings → go to **MCP** section (or press `Ctrl+Shift+J`).
+
+**Step 2:** Click **"Add new MCP Server"**.
+
+**Step 3:** Alternatively, create/edit `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "dotnet-mcp-server": {
+      "command": "dotnet",
+      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+    }
+  }
+}
+```
+
+**Step 4:** Restart Cursor. Use the tools in Composer (Agent mode).
+
+---
+
+### Windsurf (Codeium)
+
+[Windsurf](https://codeium.com/windsurf) is an AI-powered editor by Codeium with MCP support.
+
+**Step 1:** Open Windsurf and go to **Settings** → **MCP**.
+
+**Step 2:** Click **"Add Server"** and configure:
+
+```json
+{
+  "mcpServers": {
+    "dotnet-mcp-server": {
+      "command": "dotnet",
+      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+    }
+  }
+}
+```
+
+**Step 3:** Restart Windsurf. Tools are available in Cascade (the AI chat).
+
+---
+
+### Claude Code (CLI)
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is Anthropic's CLI tool. It supports MCP servers natively.
+
+```bash
+claude mcp add dotnet-mcp-server -- dotnet run --project C:\path\to\dotnet-mcp-server\src\McpServer
+```
+
+That's it — Claude Code will auto-start the server when needed.
+
+---
+
+### ChatGPT Desktop
+
+OpenAI's ChatGPT desktop app supports MCP servers (requires Plus plan).
+
+**Step 1:** Open ChatGPT Desktop → **Settings** → **Beta Features** → enable **MCP Servers**.
+
+**Step 2:** Go to **Settings** → **MCP Servers** → click **"Add Server"**.
+
+**Step 3:** Configure:
+- **Name:** `dotnet-mcp-server`
+- **Command:** `dotnet`
+- **Arguments:** `run --project C:\path\to\dotnet-mcp-server\src\McpServer`
+
+**Step 4:** Restart ChatGPT. Tools appear in the chat.
+
+---
+
+### Manual Testing (No Client Needed)
+
+You can test the server directly from any terminal:
+
+```bash
+dotnet run --project src/McpServer
+```
+
+Then paste JSON-RPC messages line by line:
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","clientInfo":{"name":"manual-test","version":"1.0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized"}
+{"jsonrpc":"2.0","id":2,"method":"tools/list"}
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"datetime","arguments":{"action":"now"}}}
+```
+
+> **Note:** Replace `C:\path\to\dotnet-mcp-server` with the actual path where you cloned the repo in all examples above.
 
 ---
 
@@ -206,32 +398,36 @@ Ask Claude:
 ## Architecture
 
 ```
-┌─────────────────────┐
-│   Claude Desktop    │
-│   (MCP Client)      │
-└──────────┬──────────┘
-           │ JSON-RPC over stdio
-           ▼
-┌─────────────────────┐
-│  dotnet-mcp-server  │
-│  (MCP Server)       │
-├─────────────────────┤
-│  ┌───────────────┐  │
-│  │ DateTime Tool │  │
-│  ├───────────────┤  │
-│  │ FileSystem    │  │
-│  │ Tool          │  │
-│  ├───────────────┤  │
-│  │ SQL Query     │  │
-│  │ Tool          │  │
-│  ├───────────────┤  │
-│  │ HTTP Tool     │  │
-│  └───────────────┘  │
-└─────────────────────┘
-           │
-     ┌─────┴─────┐
-     ▼     ▼     ▼
-   Files  SQL  APIs
+┌──────────────┐ ┌──────────┐ ┌────────┐ ┌──────────┐
+│Claude Desktop│ │ VS Code  │ │ Cursor │ │ ChatGPT  │
+│              │ │(Copilot/ │ │        │ │ Desktop  │
+│              │ │Continue/ │ │        │ │          │
+│              │ │ Cline)   │ │        │ │          │
+└──────┬───────┘ └────┬─────┘ └───┬────┘ └────┬─────┘
+       │              │           │            │
+       └──────────────┴─────┬─────┴────────────┘
+                            │ JSON-RPC over stdio
+                            ▼
+                 ┌─────────────────────┐
+                 │  dotnet-mcp-server  │
+                 │  (MCP Server)       │
+                 ├─────────────────────┤
+                 │  ┌───────────────┐  │
+                 │  │ DateTime Tool │  │
+                 │  ├───────────────┤  │
+                 │  │ FileSystem    │  │
+                 │  │ Tool          │  │
+                 │  ├───────────────┤  │
+                 │  │ SQL Query     │  │
+                 │  │ Tool          │  │
+                 │  ├───────────────┤  │
+                 │  │ HTTP Tool     │  │
+                 │  └───────────────┘  │
+                 └─────────────────────┘
+                            │
+                      ┌─────┴─────┐
+                      ▼     ▼     ▼
+                    Files  SQL  APIs
 ```
 
 ---
@@ -302,10 +498,13 @@ services.AddSingleton<ITool, MyCustomTool>();
 
 | Problem | Solution |
 |---------|----------|
-| Claude doesn't see the tools | Check `claude_desktop_config.json` path is correct. Restart Claude Desktop. |
-| "Access denied" errors | Add the path to `AllowedPaths` in config |
+| Client doesn't see the tools | Check the config file path is correct. Restart the client. Make sure the path to `dotnet-mcp-server` is absolute. |
+| "Access denied" errors | Add the path to `AllowedPaths` in `appsettings.json` |
 | SQL connection fails | Verify connection string. Ensure SQL Server is running. |
-| HTTP requests blocked | Add the host to `AllowedHosts` in config |
+| HTTP requests blocked | Add the host to `AllowedHosts` in `appsettings.json` |
+| "Server not initialized" error | Your client must send `initialize` before calling tools. Most clients do this automatically. |
+| VS Code Copilot doesn't show tools | Make sure you're in **Agent mode** (not Ask/Edit mode). Check `.vscode/mcp.json` syntax. |
+| Tools not loading in Cursor | Go to Settings → MCP and check the server shows a green status. Restart Cursor if needed. |
 
 ### View Logs
 
@@ -318,11 +517,12 @@ dotnet run 2> log.txt
 
 ## Roadmap
 
-### Phase 1 — Security & Stability
-- [ ] Fix SQL injection via subqueries (block `;` and compound statements)
-- [ ] Add initialization gate (reject tool calls before handshake)
-- [ ] Config validation on startup (warn about missing paths, bad connection strings)
-- [ ] Expand test coverage (FileSystemTool, HttpTool, SqlQueryTool, McpServerHandler)
+### Phase 1 — Security & Stability ✅ Complete
+- [x] Fix SQL injection via subqueries (block `;`, `--`, `/* */`, compound statements, 17 dangerous keywords)
+- [x] Fix path traversal edge case (trailing separator check prevents `C:\AllowedPathEvil` matching `C:\AllowedPath`)
+- [x] Add initialization gate (reject `tools/list` and `tools/call` before `initialize` handshake)
+- [x] Config validation on startup (warn about missing paths, empty connection strings, malformed hosts)
+- [x] Expand test coverage — **8 → 63 tests** (SqlQueryValidation, FileSystemTool, HttpTool, McpServerHandler)
 
 ### Phase 2 — New Tools
 - [ ] **Git Tool** — `status`, `log`, `diff`, `branch_list`, `blame` (read-only)

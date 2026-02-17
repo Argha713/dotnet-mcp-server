@@ -122,15 +122,10 @@ public class SqlQueryTool : ITool
         if (!_settings.Connections.TryGetValue(dbName, out var connConfig))
             return $"Error: Database '{dbName}' not found. Use 'list_databases' to see available connections.";
 
-        // Safety check: only allow SELECT queries
-        var trimmedQuery = query.Trim();
-        if (!trimmedQuery.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
-            return "Error: Only SELECT queries are allowed for safety. Use SELECT to retrieve data.";
-
-        // Check for dangerous keywords
-        var dangerousKeywords = new[] { "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "TRUNCATE", "EXEC", "EXECUTE" };
-        if (dangerousKeywords.Any(k => query.Contains(k, StringComparison.OrdinalIgnoreCase)))
-            return "Error: Query contains forbidden keywords. Only read-only SELECT queries are allowed.";
+        // Argha - 2026-02-17 - comprehensive SQL injection prevention
+        var validationError = ValidateQuery(query);
+        if (validationError != null)
+            return validationError;
 
         if (!int.TryParse(maxRowsStr, out var maxRows) || maxRows < 1)
             maxRows = 100;
@@ -267,6 +262,31 @@ public class SqlQueryTool : ITool
             return $"Table '{schema}.{table}' not found.";
 
         return sb.ToString();
+    }
+
+    // Argha - 2026-02-17 - extracted SQL validation into a dedicated method for testability
+    internal static string? ValidateQuery(string query)
+    {
+        var trimmedQuery = query.Trim();
+
+        // Must start with SELECT
+        if (!trimmedQuery.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
+            return "Error: Only SELECT queries are allowed for safety. Use SELECT to retrieve data.";
+
+        // Block semicolons — prevents compound statements like "SELECT 1; DROP TABLE x"
+        if (trimmedQuery.Contains(';'))
+            return "Error: Semicolons are not allowed in queries. Only single SELECT statements are permitted.";
+
+        // Block SQL comments — prevents hiding malicious code
+        if (trimmedQuery.Contains("--") || trimmedQuery.Contains("/*") || trimmedQuery.Contains("*/"))
+            return "Error: SQL comments (-- or /* */) are not allowed in queries.";
+
+        // Check for dangerous keywords
+        var dangerousKeywords = new[] { "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "TRUNCATE", "EXEC", "EXECUTE", "GRANT", "REVOKE", "MERGE", "OPENROWSET", "OPENDATASOURCE", "BULK", "XP_", "SP_" };
+        if (dangerousKeywords.Any(k => trimmedQuery.Contains(k, StringComparison.OrdinalIgnoreCase)))
+            return "Error: Query contains forbidden keywords. Only read-only SELECT queries are allowed.";
+
+        return null; // validation passed
     }
 
     private static string? GetStringArg(Dictionary<string, object>? args, string key)
