@@ -20,6 +20,7 @@ services.Configure<ServerSettings>(configuration.GetSection(ServerSettings.Secti
 services.Configure<FileSystemSettings>(configuration.GetSection(FileSystemSettings.SectionName));
 services.Configure<SqlSettings>(configuration.GetSection(SqlSettings.SectionName));
 services.Configure<HttpSettings>(configuration.GetSection(HttpSettings.SectionName));
+services.Configure<EnvironmentSettings>(configuration.GetSection(EnvironmentSettings.SectionName));
 
 // Add logging (to stderr so it doesn't interfere with stdio protocol)
 services.AddLogging(builder =>
@@ -44,6 +45,12 @@ services.AddSingleton<ITool, DateTimeTool>();
 services.AddSingleton<ITool, FileSystemTool>();
 services.AddSingleton<ITool, SqlQueryTool>();
 services.AddSingleton<ITool, HttpTool>();
+// Argha - 2026-02-18 - Phase 2 new tools
+services.AddSingleton<ITool, TextTool>();
+services.AddSingleton<ITool, DataTransformTool>();
+services.AddSingleton<ITool, EnvironmentTool>();
+services.AddSingleton<ITool, SystemInfoTool>();
+services.AddSingleton<ITool, GitTool>();
 
 // Register MCP server
 services.AddSingleton<McpServerHandler>();

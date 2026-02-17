@@ -57,6 +57,17 @@ public class HttpSettings
     public int TimeoutSeconds { get; set; } = 30;
 }
 
+// Argha - 2026-02-18 - configuration for environment variable tool blocklist
+public class EnvironmentSettings
+{
+    public const string SectionName = "Environment";
+
+    /// <summary>
+    /// Additional variable names to block beyond the hardcoded blocklist
+    /// </summary>
+    public List<string> AdditionalBlockedVariables { get; set; } = new();
+}
+
 /// <summary>
 /// General server configuration
 /// </summary>

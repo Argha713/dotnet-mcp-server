@@ -25,7 +25,7 @@ Instead of copying data into prompts, the AI can directly access the tools it ne
 
 ## Features
 
-This server provides four enterprise-ready tools:
+This server provides nine enterprise-ready tools:
 
 | Tool | Description |
 |------|-------------|
@@ -33,12 +33,21 @@ This server provides four enterprise-ready tools:
 | 📁 **filesystem** | Read files, list directories (within allowed paths) |
 | 🗄️ **sql_query** | Execute read-only SQL queries against configured databases |
 | 🌐 **http_request** | Make GET/POST requests to allowed APIs |
+| 📝 **text** | Regex match/replace, word count, text diff, format JSON/XML |
+| 🔄 **data_transform** | JSON query, CSV/JSON/XML conversion, base64, hashing |
+| 🌍 **environment** | Get/list/check environment variables (sensitive values masked) |
+| 💻 **system_info** | OS details, running processes, network interfaces |
+| 🔀 **git** | Read-only Git: status, log, diff, branches, blame |
 
 ### Security Features
 
 - ✅ **File access restricted** to configured directories only
 - ✅ **SQL queries are read-only** (SELECT only, dangerous keywords blocked)
 - ✅ **HTTP requests limited** to allowed hosts
+- ✅ **Environment variables** with sensitive value masking (passwords, tokens, keys)
+- ✅ **Git operations are read-only** with path validation and argument sanitization
+- ✅ **Regex timeout protection** against ReDoS attacks
+- ✅ **XXE prevention** in XML parsing
 - ✅ **No arbitrary code execution**
 
 ---
@@ -342,6 +351,47 @@ Ask Claude:
 - *"Fetch the latest posts from JSONPlaceholder API"*
 - *"What APIs can you access?"*
 
+### Text Tool
+
+Ask Claude:
+- *"Find all email addresses in this text"*
+- *"Replace localhost:3000 with api.prod.com in my config"*
+- *"How many words are in this document?"*
+- *"Show me the diff between these two configs"*
+- *"Pretty-print this minified JSON"*
+
+### Data Transform Tool
+
+Ask Claude:
+- *"Convert this CSV to JSON"*
+- *"Extract all user emails from this JSON"*
+- *"Base64 encode this string"*
+- *"Generate a SHA256 hash of this text"*
+- *"Convert this XML response to JSON"*
+
+### Environment Tool
+
+Ask Claude:
+- *"What is my JAVA_HOME set to?"*
+- *"Show me all Node-related environment variables"*
+- *"Is DOCKER_HOST configured?"*
+
+### System Info Tool
+
+Ask Claude:
+- *"How much disk space do I have?"*
+- *"What processes are using the most memory?"*
+- *"What's my OS version and .NET runtime?"*
+- *"Show me my network interfaces"*
+
+### Git Tool
+
+Ask Claude:
+- *"What files have I changed in this repo?"*
+- *"Show me the last 10 commits"*
+- *"What's the diff of my current changes?"*
+- *"Who last modified line 42 of Program.cs?"*
+
 ---
 
 ## Configuration Reference
@@ -416,18 +466,26 @@ Ask Claude:
                  │  │ DateTime Tool │  │
                  │  ├───────────────┤  │
                  │  │ FileSystem    │  │
-                 │  │ Tool          │  │
                  │  ├───────────────┤  │
                  │  │ SQL Query     │  │
-                 │  │ Tool          │  │
                  │  ├───────────────┤  │
                  │  │ HTTP Tool     │  │
+                 │  ├───────────────┤  │
+                 │  │ Text Tool     │  │
+                 │  ├───────────────┤  │
+                 │  │ Data Transform│  │
+                 │  ├───────────────┤  │
+                 │  │ Environment   │  │
+                 │  ├───────────────┤  │
+                 │  │ System Info   │  │
+                 │  ├───────────────┤  │
+                 │  │ Git Tool      │  │
                  │  └───────────────┘  │
                  └─────────────────────┘
                             │
-                      ┌─────┴─────┐
-                      ▼     ▼     ▼
-                    Files  SQL  APIs
+               ┌────┬───┬───┴───┬────┐
+               ▼    ▼   ▼       ▼    ▼
+             Files SQL  APIs   Git  OS
 ```
 
 ---
@@ -524,12 +582,13 @@ dotnet run 2> log.txt
 - [x] Config validation on startup (warn about missing paths, empty connection strings, malformed hosts)
 - [x] Expand test coverage — **8 → 63 tests** (SqlQueryValidation, FileSystemTool, HttpTool, McpServerHandler)
 
-### Phase 2 — New Tools
-- [ ] **Git Tool** — `status`, `log`, `diff`, `branch_list`, `blame` (read-only)
-- [ ] **System Info Tool** — `processes`, `system_info` (CPU/RAM/disk), `network`
-- [ ] **Data Transform Tool** — `json_query`, `csv_to_json`, `json_to_csv`, `xml_to_json`, `base64_encode/decode`, `hash`
-- [ ] **Text Tool** — `regex_match`, `regex_replace`, `word_count`, `diff_text`, `format_json/xml`
-- [ ] **Environment Tool** — `get`, `list`, `has` (with blocklist for sensitive vars)
+### Phase 2 — New Tools ✅ Complete
+- [x] **Text Tool** — `regex_match`, `regex_replace`, `word_count`, `diff_text`, `format_json/xml`
+- [x] **Data Transform Tool** — `json_query`, `csv_to_json`, `json_to_csv`, `xml_to_json`, `base64_encode/decode`, `hash`
+- [x] **Environment Tool** — `get`, `list`, `has` (with hardcoded blocklist for sensitive vars)
+- [x] **System Info Tool** — `system_info` (OS/CPU/RAM/disk), `processes`, `network`
+- [x] **Git Tool** — `status`, `log`, `diff`, `branch_list`, `blame` (read-only with path validation)
+- Added 5 new tools (4 → 9 total), **63 → 150 tests**, zero new NuGet dependencies
 
 ### Phase 3 — Production Readiness
 - [ ] Dockerfile + docker-compose (one-command setup)
