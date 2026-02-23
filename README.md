@@ -591,15 +591,17 @@ dotnet run 2> log.txt
 - [x] **Git Tool** — `status`, `log`, `diff`, `branch_list`, `blame` (read-only with path validation)
 - Added 5 new tools (4 → 9 total), **63 → 150 tests**, zero new NuGet dependencies
 
-### Phase 3 — Production Readiness (Phase 3.1 ✅ Complete)
+### Phase 3 — Production Readiness (Phase 3.2 ✅ Complete)
 - [ ] Dockerfile + docker-compose (one-command setup)
 - [x] GitHub Actions CI/CD (build, test on push/PR via `ci.yml`; release pipeline via `release.yml`)
 - [x] Self-contained single-file executables (win-x64, linux-x64, osx-arm64 — published on `v*` tags)
 - [ ] `dotnet tool install -g dotnet-mcp-server` distribution
 - [ ] `--init` config wizard for first-run setup
-- [ ] `--validate` health check for all configured connections
+- [x] `--validate` health check for all configured connections
 
 **Phase 3.1 summary:** Added `.github/workflows/ci.yml` (build + test on every push and PR) and `.github/workflows/release.yml` (matrix build of 3 self-contained single-file binaries attached to GitHub Releases on `v*` tags). Tests run on all three platforms before any binary is published.
+
+**Phase 3.2 summary:** Added `--validate` CLI flag. Runs health checks against all configured resources (filesystem paths, SQL connections, HTTP hosts via DNS) and exits with code 0 (all pass) or 1 (any fail). **150 → 157 tests.**
 
 ### Phase 4 — MCP Protocol Completeness
 - [ ] Resources support (`resources/list`, `resources/read`)

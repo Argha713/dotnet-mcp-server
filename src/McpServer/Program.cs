@@ -12,6 +12,13 @@ var configuration = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .Build();
 
+// Argha - 2026-02-23 - health check mode: validate all configured connections and paths, then exit
+if (args.Contains("--validate"))
+{
+    var exitCode = await ConfigurationValidator.RunAsync(configuration);
+    Environment.Exit(exitCode);
+}
+
 // Setup dependency injection
 var services = new ServiceCollection();
 
