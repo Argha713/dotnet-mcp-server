@@ -240,10 +240,17 @@ public class FileSystemToolTests : IDisposable
     [Fact]
     public async Task ReadFile_OutsideAllowedPath_ReturnsAccessDenied()
     {
+        // Argha - 2026-02-23 - use a cross-platform absolute path so the test passes on Linux CI too
+        // (C:\Windows\... is not rooted on Linux, so ResolvePath would treat it as relative to _tempDir)
+        var outsidePath = Path.Combine(
+            Path.GetPathRoot(Path.GetTempPath()) ?? "/",
+            "argha_mcp_outside_test"
+        );
+
         var result = await _tool.ExecuteAsync(new Dictionary<string, object>
         {
             ["action"] = "read",
-            ["path"] = @"C:\Windows\System32\config\sam"
+            ["path"] = outsidePath
         });
 
         result.IsError.Should().BeTrue();
