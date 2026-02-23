@@ -5,9 +5,22 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+// Argha - 2026-02-23 - for global tool installs the tool store is read-only; prefer user config dir
+// (%APPDATA%\dotnet-mcp-server on Windows, ~/.config/dotnet-mcp-server on Linux/Mac) when it has an
+// appsettings.json, falling back to BaseDirectory for local dotnet-run development.
+static string ResolveConfigDirectory()
+{
+    var userConfigDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "dotnet-mcp-server");
+    if (File.Exists(Path.Combine(userConfigDir, "appsettings.json")))
+        return userConfigDir;
+    return AppContext.BaseDirectory;
+}
+
 // Build configuration
 var configuration = new ConfigurationBuilder()
-    .SetBasePath(AppContext.BaseDirectory)
+    .SetBasePath(ResolveConfigDirectory())
     .AddJsonFile("appsettings.json", optional: true)
     .AddEnvironmentVariables()
     .Build();
@@ -20,9 +33,14 @@ if (args.Contains("--validate"))
 }
 
 // Argha - 2026-02-23 - init wizard: generate appsettings.json for first-run setup, then exit
+// Write to user config dir so global tool installs don't need write access to the tool store
 if (args.Contains("--init"))
 {
-    var outputPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+    var outputDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "dotnet-mcp-server");
+    Directory.CreateDirectory(outputDir);
+    var outputPath = Path.Combine(outputDir, "appsettings.json");
     var exitCode = await InitWizard.RunAsync(outputPath);
     Environment.Exit(exitCode);
 }

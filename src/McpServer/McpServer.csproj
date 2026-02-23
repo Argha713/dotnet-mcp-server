@@ -7,8 +7,19 @@
     <Nullable>enable</Nullable>
     <AssemblyName>dotnet-mcp-server</AssemblyName>
     <RootNamespace>McpServer</RootNamespace>
-    <!-- Argha - 2026-02-23 - version overridden at publish time via -p:Version=X.Y.Z in the release workflow -->
+    <!-- Argha - 2026-02-23 - version overridden at publish/pack time via -p:Version=X.Y.Z in the release workflow -->
     <Version>1.0.0</Version>
+    <!-- Argha - 2026-02-23 - package as dotnet global tool: dotnet tool install -g Argha.dev.McpServer -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-mcp-server</ToolCommandName>
+    <PackageId>Argha.dev.McpServer</PackageId>
+    <Description>MCP server for .NET 8 — filesystem, SQL, HTTP, datetime, git, text, and more tools for AI assistants (Claude, Copilot, Cursor, ChatGPT)</Description>
+    <Authors>Argha Sarkar</Authors>
+    <PackageTags>mcp;model-context-protocol;ai;claude;copilot;dotnet;tools;filesystem;sql;http;git</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Argha713/dotnet-mcp-server</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Argha713/dotnet-mcp-server</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +43,8 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <!-- Argha - 2026-02-23 - include repo README on NuGet.org package page -->
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

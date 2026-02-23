@@ -60,7 +60,37 @@ This server provides nine enterprise-ready tools:
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - Any MCP client (see [Supported Clients](#supported-clients) below)
 
-### 1. Clone and Build
+### Option A — Install as a Global Tool (Recommended)
+
+```bash
+dotnet tool install -g Argha.dev.McpServer
+```
+
+Then run the interactive setup wizard to create your config:
+
+```bash
+dotnet-mcp-server --init
+```
+
+The wizard writes `appsettings.json` to your user config directory:
+- **Windows:** `%APPDATA%\dotnet-mcp-server\appsettings.json`
+- **Linux/macOS:** `~/.config/dotnet-mcp-server/appsettings.json`
+
+After configuring, you can verify everything is working:
+
+```bash
+dotnet-mcp-server --validate
+```
+
+To update to the latest version later:
+
+```bash
+dotnet tool update -g Argha.dev.McpServer
+```
+
+---
+
+### Option B — Clone and Build
 
 ```bash
 git clone https://github.com/Argha713/dotnet-mcp-server.git
@@ -68,7 +98,7 @@ cd dotnet-mcp-server
 dotnet build
 ```
 
-### 2. Configure
+### Configure (Option B only)
 
 Edit `src/McpServer/appsettings.json`:
 
@@ -101,6 +131,8 @@ Edit `src/McpServer/appsettings.json`:
 
 Pick your client below and follow the setup instructions.
 
+> **Note:** All client config examples below use the global tool command `dotnet-mcp-server`. If you are using Option B (clone & build), replace `"command": "dotnet-mcp-server"` with `"command": "dotnet", "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]` instead.
+
 ---
 
 ## Supported Clients
@@ -119,8 +151,7 @@ Pick your client below and follow the setup instructions.
 {
   "mcpServers": {
     "dotnet-mcp-server": {
-      "command": "dotnet",
-      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+      "command": "dotnet-mcp-server"
     }
   }
 }
@@ -142,8 +173,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 {
   "servers": {
     "dotnet-mcp-server": {
-      "command": "dotnet",
-      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+      "command": "dotnet-mcp-server"
     }
   }
 }
@@ -161,8 +191,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 >   "mcp": {
 >     "servers": {
 >       "dotnet-mcp-server": {
->         "command": "dotnet",
->         "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+>         "command": "dotnet-mcp-server"
 >       }
 >     }
 >   }
@@ -186,8 +215,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
   "mcpServers": [
     {
       "name": "dotnet-mcp-server",
-      "command": "dotnet",
-      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+      "command": "dotnet-mcp-server"
     }
   ]
 }
@@ -213,8 +241,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 {
   "mcpServers": {
     "dotnet-mcp-server": {
-      "command": "dotnet",
-      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+      "command": "dotnet-mcp-server"
     }
   }
 }
@@ -238,8 +265,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 {
   "mcpServers": {
     "dotnet-mcp-server": {
-      "command": "dotnet",
-      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+      "command": "dotnet-mcp-server"
     }
   }
 }
@@ -261,8 +287,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 {
   "mcpServers": {
     "dotnet-mcp-server": {
-      "command": "dotnet",
-      "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]
+      "command": "dotnet-mcp-server"
     }
   }
 }
@@ -277,7 +302,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) is Anthropic's CLI tool. It supports MCP servers natively.
 
 ```bash
-claude mcp add dotnet-mcp-server -- dotnet run --project C:\path\to\dotnet-mcp-server\src\McpServer
+claude mcp add dotnet-mcp-server dotnet-mcp-server
 ```
 
 That's it — Claude Code will auto-start the server when needed.
@@ -294,8 +319,8 @@ OpenAI's ChatGPT desktop app supports MCP servers (requires Plus plan).
 
 **Step 3:** Configure:
 - **Name:** `dotnet-mcp-server`
-- **Command:** `dotnet`
-- **Arguments:** `run --project C:\path\to\dotnet-mcp-server\src\McpServer`
+- **Command:** `dotnet-mcp-server`
+- **Arguments:** *(leave blank)*
 
 **Step 4:** Restart ChatGPT. Tools appear in the chat.
 
@@ -591,19 +616,13 @@ dotnet run 2> log.txt
 - [x] **Git Tool** — `status`, `log`, `diff`, `branch_list`, `blame` (read-only with path validation)
 - Added 5 new tools (4 → 9 total), **63 → 150 tests**, zero new NuGet dependencies
 
-### Phase 3 — Production Readiness (Phase 3.3 ✅ Complete)
+### Phase 3 — Production Readiness ✅ Complete
 - [ ] Dockerfile + docker-compose (one-command setup)
 - [x] GitHub Actions CI/CD (build, test on push/PR via `ci.yml`; release pipeline via `release.yml`)
 - [x] Self-contained single-file executables (win-x64, linux-x64, osx-arm64 — published on `v*` tags)
-- [ ] `dotnet tool install -g dotnet-mcp-server` distribution
+- [x] `dotnet tool install -g dotnet-mcp-server` distribution
 - [x] `--init` config wizard for first-run setup
 - [x] `--validate` health check for all configured connections
-
-**Phase 3.1 summary:** Added `.github/workflows/ci.yml` (build + test on every push and PR) and `.github/workflows/release.yml` (matrix build of 3 self-contained single-file binaries attached to GitHub Releases on `v*` tags). Tests run on all three platforms before any binary is published.
-
-**Phase 3.2 summary:** Added `--validate` CLI flag. Runs health checks against all configured resources (filesystem paths, SQL connections, HTTP hosts via DNS) and exits with code 0 (all pass) or 1 (any fail). **150 → 157 tests.**
-
-**Phase 3.3 summary:** Added `--init` interactive wizard. Prompts for FileSystem paths, SQL connections, and HTTP hosts; writes a fully-structured `appsettings.json` next to the executable. **157 → 164 tests.**
 
 ### Phase 4 — MCP Protocol Completeness
 - [ ] Resources support (`resources/list`, `resources/read`)
