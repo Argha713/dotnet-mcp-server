@@ -7,6 +7,8 @@
     <Nullable>enable</Nullable>
     <AssemblyName>dotnet-mcp-server</AssemblyName>
     <RootNamespace>McpServer</RootNamespace>
+    <!-- Argha - 2026-02-23 - version overridden at publish time via -p:Version=X.Y.Z in the release workflow -->
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
