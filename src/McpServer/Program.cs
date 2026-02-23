@@ -19,6 +19,14 @@ if (args.Contains("--validate"))
     Environment.Exit(exitCode);
 }
 
+// Argha - 2026-02-23 - init wizard: generate appsettings.json for first-run setup, then exit
+if (args.Contains("--init"))
+{
+    var outputPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+    var exitCode = await InitWizard.RunAsync(outputPath);
+    Environment.Exit(exitCode);
+}
+
 // Setup dependency injection
 var services = new ServiceCollection();
 
