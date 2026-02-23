@@ -65,6 +65,8 @@ Thumbs.db
 # Secrets - DO NOT COMMIT
 appsettings.*.json
 !appsettings.json
+# Argha - 2026-02-23 - allow example configs to be committed (no secrets)
+!appsettings.example.json
 secrets.json
 *.pfx
 *.key

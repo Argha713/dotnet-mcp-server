@@ -127,6 +127,50 @@ Edit `src/McpServer/appsettings.json`:
 }
 ```
 
+---
+
+### Option C — Docker (No .NET Required)
+
+Run the server in a container alongside a demo SQL Server — no .NET SDK needed on your machine.
+
+**Step 1:** Copy the example config and env files:
+
+```bash
+cp docker/appsettings.example.json docker/appsettings.json
+cp .env.example .env
+```
+
+**Step 2:** Edit `docker/appsettings.json` to set your allowed paths, SQL connections, and HTTP hosts. Edit `.env` to set a strong `SQL_SA_PASSWORD`.
+
+**Step 3:** Build the image and start both services:
+
+```bash
+docker-compose up --build
+```
+
+The `docker build` step runs all 164 tests — if any test fails, the build is aborted.
+
+**Claude Desktop integration** (docker run pattern):
+
+```json
+{
+  "mcpServers": {
+    "dotnet-mcp-server": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "-v", "/path/to/docker/appsettings.json:/home/app/.config/dotnet-mcp-server/appsettings.json:ro",
+        "dotnet-mcp-server"
+      ]
+    }
+  }
+}
+```
+
+> **Note:** Replace `/path/to/docker/appsettings.json` with the absolute path to your `docker/appsettings.json` file. On Windows use forward slashes or escape backslashes.
+
+---
+
 ### 3. Connect to Your MCP Client
 
 Pick your client below and follow the setup instructions.
@@ -529,6 +573,11 @@ dotnet-mcp-server/
 │       └── Program.cs          # Entry point
 ├── tests/
 │   └── McpServer.Tests/        # Unit tests
+├── docker/
+│   └── appsettings.example.json  # Docker config template
+├── Dockerfile                  # Multi-stage Alpine build
+├── docker-compose.yml          # mcp-server + SQL Server 2022
+├── .env.example                # SQL SA password template
 └── README.md
 ```
 
@@ -617,7 +666,7 @@ dotnet run 2> log.txt
 - Added 5 new tools (4 → 9 total), **63 → 150 tests**, zero new NuGet dependencies
 
 ### Phase 3 — Production Readiness ✅ Complete
-- [ ] Dockerfile + docker-compose (one-command setup)
+- [x] Dockerfile + docker-compose (one-command setup)
 - [x] GitHub Actions CI/CD (build, test on push/PR via `ci.yml`; release pipeline via `release.yml`)
 - [x] Self-contained single-file executables (win-x64, linux-x64, osx-arm64 — published on `v*` tags)
 - [x] `dotnet tool install -g dotnet-mcp-server` distribution

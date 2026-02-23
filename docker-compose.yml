@@ -1,0 +1,37 @@
+# Argha - 2026-02-23 - docker-compose for dotnet-mcp-server + SQL Server demo
+# Usage:
+#   1. cp docker/appsettings.example.json docker/appsettings.json  (then edit as needed)
+#   2. cp .env.example .env  (then set SQL_SA_PASSWORD)
+#   3. docker-compose up
+
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: false
+    volumes:
+      # Mount your config (copy from docker/appsettings.example.json first)
+      - ./docker/appsettings.json:/home/app/.config/dotnet-mcp-server/appsettings.json:ro
+      # Mount a local workspace directory as read-only for the filesystem tool
+      - ./workspace:/workspace:ro
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${SQL_SA_PASSWORD}"
+    ports:
+      - "1433:1433"
+    healthcheck:
+      # Argha - 2026-02-23 - $$SA_PASSWORD: $$ prevents docker-compose from
+      # substituting; the running container shell resolves it to $SA_PASSWORD
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$SA_PASSWORD -No -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

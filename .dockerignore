@@ -1,0 +1,11 @@
+# Argha - 2026-02-23 - Exclude build artifacts, IDE files, and secrets from Docker context
+obj/
+bin/
+.git/
+.github/
+.vs/
+*.user
+*.suo
+publish/
+.env
+.env.*
