@@ -1,15 +1,11 @@
-// Argha - 2026-02-24 - no-op reporter used when client sends no progressToken; zero overhead
-namespace McpServer.Progress;
+// Argha - 2026-02-24 - Phase 5.1: NullProgressReporter moved to McpServer.Plugin.Abstractions.
+// Provided transitively via the <ProjectReference> to McpServer.Plugin.Abstractions.
+// Original definition preserved below for reference.
 
-/// <summary>
-/// No-op IProgressReporter used when the client did not supply a progressToken.
-/// Use the singleton Instance to avoid allocations.
-/// </summary>
-public class NullProgressReporter : IProgressReporter
-{
-    /// <summary>Singleton — reuse instead of allocating new instances.</summary>
-    public static readonly NullProgressReporter Instance = new();
-
-    /// <inheritdoc />
-    public void Report(double progress, double? total = null) { }
-}
+// namespace McpServer.Progress;
+//
+// public class NullProgressReporter : IProgressReporter
+// {
+//     public static readonly NullProgressReporter Instance = new();
+//     public void Report(double progress, double? total = null) { }
+// }

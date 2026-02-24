@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Argha - 2026-02-24 - Phase 5.1: root namespace matches the host so plugin types share namespaces -->
+    <RootNamespace>McpServer</RootNamespace>
+    <AssemblyName>McpServer.Plugin.Abstractions</AssemblyName>
+    <Version>1.0.0</Version>
+    <PackageId>McpServer.Plugin.Abstractions</PackageId>
+    <Description>Contract types for building dotnet-mcp-server plugins. Reference this package to implement ITool.</Description>
+    <Authors>Argha Sarkar</Authors>
+    <PackageTags>mcp;model-context-protocol;plugin;dotnet;ai</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Argha713/dotnet-mcp-server</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Argha - 2026-02-24 - System.Text.Json for JsonPropertyName attributes on schema/result types -->
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <!-- Argha - 2026-02-24 - ILogger for PluginContext logging support (abstractions only, no implementation) -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

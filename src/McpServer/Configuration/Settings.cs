@@ -68,6 +68,24 @@ public class EnvironmentSettings
     public List<string> AdditionalBlockedVariables { get; set; } = new();
 }
 
+// Argha - 2026-02-24 - Phase 5.1: configuration for the plugin loader
+public class PluginsSettings
+{
+    public const string SectionName = "Plugins";
+
+    /// <summary>
+    /// Set to false to disable all plugin loading. Default: true.
+    /// </summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// Path to the plugins directory. Relative paths are resolved from the config directory
+    /// (%APPDATA%\dotnet-mcp-server on Windows, ~/.config/dotnet-mcp-server on Linux/macOS).
+    /// Default: "plugins"
+    /// </summary>
+    public string Directory { get; set; } = "plugins";
+}
+
 /// <summary>
 /// General server configuration
 /// </summary>

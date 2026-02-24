@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Argha - 2026-02-24 - Plugin DLLs must be class libraries, not executables -->
+    <OutputType>Library</OutputType>
+    <AssemblyName>SamplePlugin</AssemblyName>
+    <RootNamespace>SamplePlugin</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Argha - 2026-02-24 - Reference the abstractions project locally during development.
+         When publishing to NuGet, replace this with:
+         <PackageReference Include="McpServer.Plugin.Abstractions" Version="1.0.0" /> -->
+    <ProjectReference Include="..\..\src\McpServer.Plugin.Abstractions\McpServer.Plugin.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

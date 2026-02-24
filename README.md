@@ -679,8 +679,8 @@ dotnet run 2> log.txt
 - [x] Logging protocol (`logging/setLevel`, `notifications/message`)
 - [x] Progress notifications for long-running operations
 
-### Phase 5 — Developer Experience
-- [ ] Plugin architecture (drop-in tool DLLs from `/plugins` folder)
+### Phase 5 — Developer Experience ✅ (partial)
+- [x] Plugin architecture (drop-in tool DLLs from `/plugins` folder)
 - [ ] `dotnet new mcp-tool` project template for custom tools
 - [ ] Documentation site (Getting Started, Tool Reference, Custom Tools guide)
 - [ ] Example configurations (`developer.json`, `data-analyst.json`, `api-integrator.json`)

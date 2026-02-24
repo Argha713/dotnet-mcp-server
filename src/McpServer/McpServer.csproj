@@ -22,6 +22,11 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
+  <!-- Argha - 2026-02-24 - Phase 5.1: contract types for plugin architecture (ITool, ToolCallResult, etc.) -->
+  <ItemGroup>
+    <ProjectReference Include="..\McpServer.Plugin.Abstractions\McpServer.Plugin.Abstractions.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />

@@ -1,32 +1,17 @@
-using McpServer.Progress;
-using McpServer.Protocol;
+// Argha - 2026-02-24 - Phase 5.1: ITool moved to McpServer.Plugin.Abstractions so plugin DLLs can
+// implement it without referencing the host executable. The type is now provided transitively via
+// the <ProjectReference> to McpServer.Plugin.Abstractions in McpServer.csproj.
+// Original definition preserved below for reference.
 
-namespace McpServer.Tools;
-
-/// <summary>
-/// Interface for MCP tools
-/// </summary>
-public interface ITool
-{
-    /// <summary>
-    /// Unique name of the tool
-    /// </summary>
-    string Name { get; }
-
-    /// <summary>
-    /// Human-readable description
-    /// </summary>
-    string Description { get; }
-
-    /// <summary>
-    /// JSON Schema for the tool's input parameters
-    /// </summary>
-    JsonSchema InputSchema { get; }
-
-    // Argha - 2026-02-24 - added IProgressReporter? progress parameter for MCP progress notifications
-    /// <summary>
-    /// Execute the tool with given arguments.
-    /// Pass a real IProgressReporter when the client supplied a progressToken; otherwise null (NullProgressReporter).
-    /// </summary>
-    Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default);
-}
+// using McpServer.Progress;
+// using McpServer.Protocol;
+//
+// namespace McpServer.Tools;
+//
+// public interface ITool
+// {
+//     string Name { get; }
+//     string Description { get; }
+//     JsonSchema InputSchema { get; }
+//     Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default);
+// }

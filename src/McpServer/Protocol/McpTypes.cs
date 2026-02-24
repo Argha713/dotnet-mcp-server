@@ -126,37 +126,25 @@ public class ToolDefinition
     public JsonSchema InputSchema { get; set; } = new();
 }
 
-/// <summary>
-/// JSON Schema for tool inputs
-/// </summary>
-public class JsonSchema
-{
-    [JsonPropertyName("type")]
-    public string Type { get; set; } = "object";
+// Argha - 2026-02-24 - Phase 5.1: JsonSchema and JsonSchemaProperty moved to McpServer.Plugin.Abstractions
+// (Protocol/JsonSchema.cs) so plugin DLLs can declare InputSchema without referencing the host.
+// Provided here transitively via the <ProjectReference> to McpServer.Plugin.Abstractions.
+// Original definitions preserved below for reference.
 
-    [JsonPropertyName("properties")]
-    public Dictionary<string, JsonSchemaProperty>? Properties { get; set; }
-
-    [JsonPropertyName("required")]
-    public List<string>? Required { get; set; }
-}
-
-public class JsonSchemaProperty
-{
-    [JsonPropertyName("type")]
-    public string Type { get; set; } = "string";
-
-    [JsonPropertyName("description")]
-    public string Description { get; set; } = string.Empty;
-
-    [JsonPropertyName("enum")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public List<string>? Enum { get; set; }
-
-    [JsonPropertyName("default")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public object? Default { get; set; }
-}
+// public class JsonSchema
+// {
+//     [JsonPropertyName("type")]       public string Type { get; set; } = "object";
+//     [JsonPropertyName("properties")] public Dictionary<string, JsonSchemaProperty>? Properties { get; set; }
+//     [JsonPropertyName("required")]   public List<string>? Required { get; set; }
+// }
+//
+// public class JsonSchemaProperty
+// {
+//     [JsonPropertyName("type")]        public string Type { get; set; } = "string";
+//     [JsonPropertyName("description")] public string Description { get; set; } = string.Empty;
+//     [JsonPropertyName("enum")]        public List<string>? Enum { get; set; }
+//     [JsonPropertyName("default")]     public object? Default { get; set; }
+// }
 
 /// <summary>
 /// MCP Tool call request
@@ -219,38 +207,24 @@ public class ProgressParams
     public double? Total { get; set; }
 }
 
-/// <summary>
-/// MCP Tool call result
-/// </summary>
-public class ToolCallResult
-{
-    [JsonPropertyName("content")]
-    public List<ContentBlock> Content { get; set; } = new();
+// Argha - 2026-02-24 - Phase 5.1: ToolCallResult and ContentBlock moved to McpServer.Plugin.Abstractions
+// (Protocol/ToolCallResult.cs) so plugin tools can return results without referencing the host.
+// Provided here transitively via the <ProjectReference> to McpServer.Plugin.Abstractions.
+// Original definitions preserved below for reference.
 
-    [JsonPropertyName("isError")]
-    public bool IsError { get; set; } = false;
-}
-
-/// <summary>
-/// Content block (text or image)
-/// </summary>
-public class ContentBlock
-{
-    [JsonPropertyName("type")]
-    public string Type { get; set; } = "text";
-
-    [JsonPropertyName("text")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Text { get; set; }
-
-    [JsonPropertyName("data")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Data { get; set; }
-
-    [JsonPropertyName("mimeType")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? MimeType { get; set; }
-}
+// public class ToolCallResult
+// {
+//     [JsonPropertyName("content")]  public List<ContentBlock> Content { get; set; } = new();
+//     [JsonPropertyName("isError")]  public bool IsError { get; set; } = false;
+// }
+//
+// public class ContentBlock
+// {
+//     [JsonPropertyName("type")]     public string Type { get; set; } = "text";
+//     [JsonPropertyName("text")]     public string? Text { get; set; }
+//     [JsonPropertyName("data")]     public string? Data { get; set; }
+//     [JsonPropertyName("mimeType")] public string? MimeType { get; set; }
+// }
 
 /// <summary>
 /// List tools response
