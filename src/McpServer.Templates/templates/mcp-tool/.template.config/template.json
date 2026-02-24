@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Argha Sarkar",
+  "classifications": ["MCP", "Plugin", "AI", "Tool"],
+  "identity": "Argha.McpServer.PluginTemplate.CSharp",
+  "name": "MCP Tool Plugin",
+  "shortName": "mcp-tool",
+  "description": "A drop-in plugin tool for dotnet-mcp-server. Implements ITool and compiles to a DLL you place in the plugins/ folder.",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "MyMcpTool",
+  "preferNameDirectory": true
+}

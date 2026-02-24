@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- Argha - 2026-02-24 - PackageType=Template registers this package with the dotnet new engine -->
+    <PackageType>Template</PackageType>
+    <PackageId>Argha.dev.McpServer.Templates</PackageId>
+    <Version>1.0.0</Version>
+    <Description>dotnet new templates for dotnet-mcp-server plugins. Provides the mcp-tool template for scaffolding custom MCP tool plugins.</Description>
+    <Authors>Argha Sarkar</Authors>
+    <PackageTags>mcp;model-context-protocol;dotnet;template;plugin;ai;dotnet-new</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Argha713/dotnet-mcp-server</RepositoryUrl>
+    <!-- Argha - 2026-02-24 - Template packages carry no build output -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <!-- Argha - 2026-02-24 - Suppress NU5128: template packages have no lib assemblies by design -->
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <!-- Argha - 2026-02-24 - NoDefaultExcludes ensures .template.config/ (dotfiles) are packed -->
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Argha - 2026-02-24 - Prevent the SDK from trying to compile template source files.
+         Template packages are content-only — nothing in templates/ should be compiled. -->
+    <Compile Remove="templates/**/*" />
+    <EmbeddedResource Remove="templates/**/*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Argha - 2026-02-24 - Embed all template source files under content/ in the NuGet package.
+         %(RecursiveDir) preserves the sub-path from the ** glob root so dotnet new can find
+         the template.json at content/mcp-tool/.template.config/template.json. -->
+    <None Include="templates/**/*" Pack="true" PackagePath="content/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

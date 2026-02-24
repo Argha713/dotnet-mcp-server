@@ -627,6 +627,63 @@ services.AddSingleton<ITool, MyCustomTool>();
 
 ---
 
+## Plugin Development
+
+You can extend the server with your own tools — no need to fork or modify the core project. Plugins are plain .NET class libraries that implement `ITool` and get dropped into the `plugins/` folder.
+
+### Scaffold a plugin in one command
+
+**Step 1:** Install the template package (once):
+
+```bash
+dotnet new install Argha.dev.McpServer.Templates
+```
+
+**Step 2:** Scaffold a new plugin project:
+
+```bash
+dotnet new mcp-tool -n WeatherTool
+cd WeatherTool
+```
+
+**Step 3:** Implement your tool — open `WeatherTool.cs` and follow the TODO markers.
+
+**Step 4:** Build and install:
+
+```bash
+dotnet build -c Release
+```
+
+**Windows:**
+```powershell
+copy bin\Release\net8.0\WeatherTool.dll "$env:APPDATA\dotnet-mcp-server\plugins\"
+```
+
+**Linux / macOS:**
+```bash
+cp bin/Release/net8.0/WeatherTool.dll ~/.config/dotnet-mcp-server/plugins/
+```
+
+Restart the server — your tool appears in `tools/list` automatically.
+
+### Plugin configuration
+
+Pass values to your plugin via `appsettings.json`:
+
+```json
+{
+  "Plugins": {
+    "Config": {
+      "my_api_key": "your-value-here"
+    }
+  }
+}
+```
+
+Use the `PluginContext` constructor pattern in your tool class to read these values (the scaffolded file includes a commented-out example).
+
+---
+
 ## Troubleshooting
 
 | Problem | Solution |
@@ -681,7 +738,7 @@ dotnet run 2> log.txt
 
 ### Phase 5 — Developer Experience ✅ (partial)
 - [x] Plugin architecture (drop-in tool DLLs from `/plugins` folder)
-- [ ] `dotnet new mcp-tool` project template for custom tools
+- [x] `dotnet new mcp-tool` project template for custom tools
 - [ ] Documentation site (Getting Started, Tool Reference, Custom Tools guide)
 - [ ] Example configurations (`developer.json`, `data-analyst.json`, `api-integrator.json`)
 - [ ] `CONTRIBUTING.md` + issue templates

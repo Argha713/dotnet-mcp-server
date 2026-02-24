@@ -32,3 +32,40 @@ jobs:
 
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
+
+  # Argha - 2026-02-24 - Smoke test: install the mcp-tool template locally, scaffold a plugin,
+  # and verify it compiles cleanly. Catches template regressions before any release.
+  template-smoke-test:
+    name: Template Smoke Test
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Argha - 2026-02-24 - Pack the abstractions to a temporary local feed so the scaffolded
+      # project can restore without requiring the package to be published on NuGet.org first.
+      - name: Pack Plugin.Abstractions to local feed
+        run: dotnet pack src/McpServer.Plugin.Abstractions --configuration Release --output /tmp/local-nuget
+
+      # Argha - 2026-02-24 - Install the template package from local disk (not NuGet.org).
+      - name: Install mcp-tool template
+        run: dotnet new install ./src/McpServer.Templates/ --force
+
+      - name: Scaffold plugin with template
+        run: dotnet new mcp-tool -n SmokeTool --output ./tmp/SmokeTool --force
+
+      - name: Restore scaffolded plugin
+        run: >
+          dotnet restore ./tmp/SmokeTool/SmokeTool.csproj
+          --source /tmp/local-nuget
+          --source https://api.nuget.org/v3/index.json
+
+      - name: Build scaffolded plugin
+        run: dotnet build ./tmp/SmokeTool/SmokeTool.csproj --no-restore --configuration Release

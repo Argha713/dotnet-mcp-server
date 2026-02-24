@@ -122,3 +122,41 @@ jobs:
           --api-key ${{ secrets.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
+
+  # Argha - 2026-02-24 - publish the dotnet new template package so plugin authors can run
+  # "dotnet new install Argha.dev.McpServer.Templates" and scaffold plugins in one command.
+  # Runs after publish-nuget so McpServer.Plugin.Abstractions is already on NuGet.org when
+  # the template package resolves its PackageReference during end-user restore.
+  publish-templates:
+    name: Publish Templates to NuGet.org
+    needs: publish-nuget
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Argha - 2026-02-24 - strip the leading 'v' from the tag to get a clean semver
+      - name: Extract version
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Pack
+        run: >
+          dotnet pack src/McpServer.Templates
+          --configuration Release
+          -p:Version=${{ steps.version.outputs.VERSION }}
+          --output ./nupkg-templates
+
+      - name: Push to NuGet.org
+        run: >
+          dotnet nuget push ./nupkg-templates/*.nupkg
+          --api-key ${{ secrets.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

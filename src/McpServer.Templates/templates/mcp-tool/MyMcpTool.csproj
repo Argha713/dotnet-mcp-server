@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Plugin DLLs must be class libraries, not executables -->
+    <OutputType>Library</OutputType>
+    <AssemblyName>MyMcpTool</AssemblyName>
+    <RootNamespace>MyMcpTool</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Contract types: ITool, JsonSchema, ToolCallResult, PluginContext, IProgressReporter -->
+    <PackageReference Include="McpServer.Plugin.Abstractions" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>
