@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: isolated AssemblyLoadContext per plugin DLL.
+// Argha - 2026-02-24 - isolated AssemblyLoadContext per plugin DLL.
 // Each plugin runs in its own load context so its transitive dependencies cannot conflict
 // with each other or with the host. The abstractions assembly is explicitly shared from the
 // host context so that ITool type identity is preserved across the boundary — without this,

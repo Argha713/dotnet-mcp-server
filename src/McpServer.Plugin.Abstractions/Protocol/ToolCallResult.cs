@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: ToolCallResult and ContentBlock extracted to abstractions
+// Argha - 2026-02-24 - ToolCallResult and ContentBlock extracted to abstractions
 // so plugin tools can return results without referencing the host executable.
 using System.Text.Json.Serialization;
 

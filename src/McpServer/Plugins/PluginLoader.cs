@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: scans the plugins directory for DLLs, loads each in an isolated
+// Argha - 2026-02-24 - scans the plugins directory for DLLs, loads each in an isolated
 // AssemblyLoadContext, and yields ITool instances for every public ITool implementor found.
 // A bad plugin (corrupt DLL, missing dependencies, throwing constructor) is logged and skipped —
 // it must never prevent the server from starting.

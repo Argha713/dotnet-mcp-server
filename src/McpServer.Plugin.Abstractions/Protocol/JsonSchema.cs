@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: JsonSchema and JsonSchemaProperty extracted to abstractions
+// Argha - 2026-02-24 - JsonSchema and JsonSchemaProperty extracted to abstractions
 // so plugin tools can declare their InputSchema without referencing the host executable.
 using System.Text.Json.Serialization;
 

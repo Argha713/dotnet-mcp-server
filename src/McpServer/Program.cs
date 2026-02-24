@@ -94,7 +94,7 @@ services.AddSingleton<ITool, EnvironmentTool>();
 services.AddSingleton<ITool, SystemInfoTool>();
 services.AddSingleton<ITool, GitTool>();
 
-// Argha - 2026-02-24 - Phase 5.1: load plugin tools from the configured plugins directory.
+// Argha - 2026-02-24 - load plugin tools from the configured plugins directory.
 // A dedicated minimal logger factory is used here because the full DI-managed logger (with the
 // MCP log sink) is not yet built — plugin loading happens before BuildServiceProvider().
 var pluginsConfig = configuration

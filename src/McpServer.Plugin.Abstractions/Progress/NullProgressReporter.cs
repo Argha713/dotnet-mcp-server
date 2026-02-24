@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: NullProgressReporter extracted to abstractions.
+// Argha - 2026-02-24 - NullProgressReporter extracted to abstractions.
 // Plugin tools can safely call progress?.Report() without null-checking if they receive
 // NullProgressReporter.Instance when the client sent no progressToken.
 namespace McpServer.Progress;

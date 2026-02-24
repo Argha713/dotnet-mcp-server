@@ -124,7 +124,7 @@ jobs:
           --skip-duplicate
 
   # Argha - 2026-02-24 - publish the dotnet new template package so plugin authors can run
-  # "dotnet new install Argha.dev.McpServer.Templates" and scaffold plugins in one command.
+  # "dotnet new install McpServer.Net.Templates" and scaffold plugins in one command.
   # Runs after publish-nuget so McpServer.Plugin.Abstractions is already on NuGet.org when
   # the template package resolves its PackageReference during end-user restore.
   publish-templates:

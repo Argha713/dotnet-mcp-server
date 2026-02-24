@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: ITool extracted to McpServer.Plugin.Abstractions so plugin DLLs can
+// Argha - 2026-02-24 - ITool extracted to McpServer.Plugin.Abstractions so plugin DLLs can
 // implement the interface without referencing the host executable.
 using McpServer.Progress;
 using McpServer.Protocol;

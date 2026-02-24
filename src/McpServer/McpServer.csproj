@@ -9,10 +9,10 @@
     <RootNamespace>McpServer</RootNamespace>
     <!-- Argha - 2026-02-23 - version overridden at publish/pack time via -p:Version=X.Y.Z in the release workflow -->
     <Version>1.0.0</Version>
-    <!-- Argha - 2026-02-23 - package as dotnet global tool: dotnet tool install -g Argha.dev.McpServer -->
+    <!-- Argha - 2026-02-23 - package as dotnet global tool: dotnet tool install -g McpServer.Net -->
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-mcp-server</ToolCommandName>
-    <PackageId>Argha.dev.McpServer</PackageId>
+    <PackageId>McpServer.Net</PackageId>
     <Description>MCP server for .NET 8 — filesystem, SQL, HTTP, datetime, git, text, and more tools for AI assistants (Claude, Copilot, Cursor, ChatGPT)</Description>
     <Authors>Argha Sarkar</Authors>
     <PackageTags>mcp;model-context-protocol;ai;claude;copilot;dotnet;tools;filesystem;sql;http;git</PackageTags>
@@ -22,7 +22,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <!-- Argha - 2026-02-24 - Phase 5.1: contract types for plugin architecture (ITool, ToolCallResult, etc.) -->
+  <!-- Argha - 2026-02-24 - contract types for plugin architecture (ITool, ToolCallResult, etc.) -->
   <ItemGroup>
     <ProjectReference Include="..\McpServer.Plugin.Abstractions\McpServer.Plugin.Abstractions.csproj" />
   </ItemGroup>

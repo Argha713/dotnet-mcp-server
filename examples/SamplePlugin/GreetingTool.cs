@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: example plugin tool demonstrating both constructor patterns.
+// Argha - 2026-02-24 - example plugin tool demonstrating both constructor patterns.
 // This file shows how to build a drop-in plugin for dotnet-mcp-server.
 //
 // Build and install:

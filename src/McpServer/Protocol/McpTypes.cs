@@ -126,7 +126,7 @@ public class ToolDefinition
     public JsonSchema InputSchema { get; set; } = new();
 }
 
-// Argha - 2026-02-24 - Phase 5.1: JsonSchema and JsonSchemaProperty moved to McpServer.Plugin.Abstractions
+// Argha - 2026-02-24 - JsonSchema and JsonSchemaProperty moved to McpServer.Plugin.Abstractions
 // (Protocol/JsonSchema.cs) so plugin DLLs can declare InputSchema without referencing the host.
 // Provided here transitively via the <ProjectReference> to McpServer.Plugin.Abstractions.
 // Original definitions preserved below for reference.
@@ -207,7 +207,7 @@ public class ProgressParams
     public double? Total { get; set; }
 }
 
-// Argha - 2026-02-24 - Phase 5.1: ToolCallResult and ContentBlock moved to McpServer.Plugin.Abstractions
+// Argha - 2026-02-24 - ToolCallResult and ContentBlock moved to McpServer.Plugin.Abstractions
 // (Protocol/ToolCallResult.cs) so plugin tools can return results without referencing the host.
 // Provided here transitively via the <ProjectReference> to McpServer.Plugin.Abstractions.
 // Original definitions preserved below for reference.

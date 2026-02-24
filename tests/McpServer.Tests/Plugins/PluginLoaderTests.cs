@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: unit tests for PluginLoader
+// Argha - 2026-02-24 - unit tests for PluginLoader
 using FluentAssertions;
 using McpServer.Plugins;
 using Microsoft.Extensions.Configuration;

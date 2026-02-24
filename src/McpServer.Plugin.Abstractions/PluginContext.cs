@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: PluginContext gives plugin tools access to configuration
+// Argha - 2026-02-24 - PluginContext gives plugin tools access to configuration
 // and logging without depending on the host's internal DI container.
 using Microsoft.Extensions.Logging;
 

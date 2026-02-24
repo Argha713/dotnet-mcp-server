@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: ITool moved to McpServer.Plugin.Abstractions so plugin DLLs can
+// Argha - 2026-02-24 - ITool moved to McpServer.Plugin.Abstractions so plugin DLLs can
 // implement it without referencing the host executable. The type is now provided transitively via
 // the <ProjectReference> to McpServer.Plugin.Abstractions in McpServer.csproj.
 // Original definition preserved below for reference.

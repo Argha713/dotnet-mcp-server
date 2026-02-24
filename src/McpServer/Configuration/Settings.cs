@@ -68,7 +68,7 @@ public class EnvironmentSettings
     public List<string> AdditionalBlockedVariables { get; set; } = new();
 }
 
-// Argha - 2026-02-24 - Phase 5.1: configuration for the plugin loader
+// Argha - 2026-02-24 - configuration for the plugin loader
 public class PluginsSettings
 {
     public const string SectionName = "Plugins";

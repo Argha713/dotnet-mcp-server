@@ -1,4 +1,4 @@
-// Argha - 2026-02-24 - Phase 5.1: IProgressReporter extracted to abstractions so plugin tools
+// Argha - 2026-02-24 - IProgressReporter extracted to abstractions so plugin tools
 // can report progress without referencing the host executable.
 namespace McpServer.Progress;
 
