@@ -1,4 +1,5 @@
 using McpServer.Configuration;
+using McpServer.Logging;
 using McpServer.Prompts;
 using McpServer.Protocol;
 using McpServer.Resources;
@@ -21,6 +22,8 @@ public class McpServerHandler
     private readonly IEnumerable<IPromptProvider> _promptProviders;
     private readonly ServerSettings _serverSettings;
     private readonly ILogger<McpServerHandler> _logger;
+    // Argha - 2026-02-24 - sink receives the stdout writer at RunAsync startup and forwards logs to client
+    private readonly McpLogSink _logSink;
     private readonly JsonSerializerOptions _jsonOptions;
     // Argha - 2026-02-17 - initialization gate: reject tool calls before handshake completes (MCP spec)
     private bool _initialized;
@@ -30,13 +33,15 @@ public class McpServerHandler
         IEnumerable<IResourceProvider> resourceProviders,
         IEnumerable<IPromptProvider> promptProviders,
         IOptions<ServerSettings> serverSettings,
-        ILogger<McpServerHandler> logger)
+        ILogger<McpServerHandler> logger,
+        McpLogSink logSink)
     {
         _tools = tools;
         _resourceProviders = resourceProviders;
         _promptProviders = promptProviders;
         _serverSettings = serverSettings.Value;
         _logger = logger;
+        _logSink = logSink;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -56,6 +61,9 @@ public class McpServerHandler
         using var stdout = Console.OpenStandardOutput();
         using var reader = new StreamReader(stdin);
         using var writer = new StreamWriter(stdout) { AutoFlush = true };
+
+        // Argha - 2026-02-24 - hand the writer to the log sink so ILogger calls can reach the client
+        _logSink.Initialize(writer);
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -156,6 +164,8 @@ public class McpServerHandler
             // Argha - 2026-02-24 - prompts protocol methods
             "prompts/list" => await HandleListPromptsAsync(request, cancellationToken),
             "prompts/get" => await HandleGetPromptAsync(request, cancellationToken),
+            // Argha - 2026-02-24 - logging protocol: client sets the minimum forwarding level
+            "logging/setLevel" => HandleSetLevel(request),
             "ping" => HandlePing(request),
             _ => new JsonRpcResponse
             {
@@ -191,12 +201,14 @@ public class McpServerHandler
             Result = new InitializeResult
             {
                 ProtocolVersion = "2024-11-05",
-                // Argha - 2026-02-24 - advertise Resources and Prompts capabilities
+                // Argha - 2026-02-24 - advertise Resources, Prompts and Logging capabilities
                 Capabilities = new ServerCapabilities
                 {
                     Tools = new ToolsCapability { ListChanged = false },
                     Resources = new ResourcesCapability { Subscribe = false, ListChanged = false },
-                    Prompts = new PromptsCapability { ListChanged = false }
+                    Prompts = new PromptsCapability { ListChanged = false },
+                    // Argha - 2026-02-24 - empty object signals the client that logging/setLevel is supported
+                    Logging = new LoggingCapability()
                 },
                 ServerInfo = new ServerInfo
                 {
@@ -490,6 +502,53 @@ public class McpServerHandler
                 Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = ex.Message }
             };
         }
+    }
+
+    // Argha - 2026-02-24 - handle logging/setLevel: update the MCP log forwarding threshold
+    private JsonRpcResponse HandleSetLevel(JsonRpcRequest request)
+    {
+        if (!request.Params.HasValue)
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = "Missing params" }
+            };
+        }
+
+        var setParams = JsonSerializer.Deserialize<SetLevelParams>(
+            request.Params.Value.GetRawText(), _jsonOptions);
+
+        if (setParams == null || string.IsNullOrEmpty(setParams.Level))
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = "Missing level parameter" }
+            };
+        }
+
+        if (!Enum.TryParse<McpLogLevel>(setParams.Level, ignoreCase: true, out var level))
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError
+                {
+                    Code = JsonRpcErrorCodes.InvalidParams,
+                    Message = $"Invalid log level: '{setParams.Level}'. Valid values: debug, info, notice, warning, error, critical, alert, emergency"
+                }
+            };
+        }
+
+        _logSink.SetLevel(level);
+        _logger.LogInformation("MCP log level set to {Level}", setParams.Level);
+
+        return new JsonRpcResponse
+        {
+            Id = request.Id,
+            Result = new { }
+        };
     }
 
     private JsonRpcResponse HandlePing(JsonRpcRequest request)

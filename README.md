@@ -148,7 +148,7 @@ cp .env.example .env
 docker-compose up --build
 ```
 
-The `docker build` step runs all 164 tests — if any test fails, the build is aborted.
+The `docker build` step runs all tests — if any test fail, the build is aborted.
 
 **Claude Desktop integration** (docker run pattern):
 
@@ -673,10 +673,10 @@ dotnet run 2> log.txt
 - [x] `--init` config wizard for first-run setup
 - [x] `--validate` health check for all configured connections
 
-### Phase 4 — MCP Protocol Completeness
+### Phase 4 — MCP Protocol Completeness ✅
 - [x] Resources support (`resources/list`, `resources/read`)
 - [x] Prompts support (`prompts/list`, `prompts/get`) with built-in templates
-- [ ] Logging protocol (`logging/setLevel`, `notifications/message`)
+- [x] Logging protocol (`logging/setLevel`, `notifications/message`)
 - [ ] Progress notifications for long-running operations
 
 ### Phase 5 — Developer Experience

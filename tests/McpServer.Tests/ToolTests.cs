@@ -604,7 +604,8 @@ public class McpServerHandlerTests
         });
         var logger = NullLogger<McpServerHandler>.Instance;
         // Argha - 2026-02-24 - pass empty resource and prompt providers; tested separately
-        _handler = new McpServerHandler(tools, Array.Empty<McpServer.Resources.IResourceProvider>(), Array.Empty<McpServer.Prompts.IPromptProvider>(), serverSettings, logger);
+        // Argha - 2026-02-24 - pass a no-op McpLogSink (writer never initialised in unit tests)
+        _handler = new McpServerHandler(tools, Array.Empty<McpServer.Resources.IResourceProvider>(), Array.Empty<McpServer.Prompts.IPromptProvider>(), serverSettings, logger, new McpServer.Logging.McpLogSink());
     }
 
     private static string MakeRequest(string method, int id = 1, string? paramsJson = null)

@@ -15,6 +15,11 @@ public class ServerCapabilities
 
     [JsonPropertyName("prompts")]
     public PromptsCapability? Prompts { get; set; }
+
+    // Argha - 2026-02-24 - advertise logging capability so clients know they can call logging/setLevel
+    [JsonPropertyName("logging")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public LoggingCapability? Logging { get; set; }
 }
 
 public class ToolsCapability
@@ -37,6 +42,9 @@ public class PromptsCapability
     [JsonPropertyName("listChanged")]
     public bool ListChanged { get; set; } = false;
 }
+
+// Argha - 2026-02-24 - MCP logging capability (no sub-fields in protocol version 2024-11-05)
+public class LoggingCapability { }
 
 /// <summary>
 /// MCP Initialize request params
@@ -365,4 +373,61 @@ public class GetPromptResult
 
     [JsonPropertyName("messages")]
     public List<PromptMessage> Messages { get; set; } = new();
+}
+
+// Argha - 2026-02-24 - MCP logging protocol models for logging/setLevel and notifications/message
+
+/// <summary>
+/// Syslog-style log levels used by the MCP logging protocol.
+/// Order matters: values increase with severity for threshold comparisons.
+/// </summary>
+public enum McpLogLevel
+{
+    Debug = 0,
+    Info = 1,
+    Notice = 2,
+    Warning = 3,
+    Error = 4,
+    Critical = 5,
+    Alert = 6,
+    Emergency = 7
+}
+
+/// <summary>
+/// Params for the logging/setLevel request sent by the client
+/// </summary>
+public class SetLevelParams
+{
+    [JsonPropertyName("level")]
+    public string Level { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Body of a notifications/message notification sent by the server to the client
+/// </summary>
+public class LogMessageNotification
+{
+    [JsonPropertyName("jsonrpc")]
+    public string JsonRpc { get; set; } = "2.0";
+
+    [JsonPropertyName("method")]
+    public string Method { get; set; } = "notifications/message";
+
+    [JsonPropertyName("params")]
+    public LogMessageParams Params { get; set; } = new();
+}
+
+/// <summary>
+/// Params payload inside notifications/message
+/// </summary>
+public class LogMessageParams
+{
+    [JsonPropertyName("level")]
+    public string Level { get; set; } = string.Empty;
+
+    [JsonPropertyName("logger")]
+    public string Logger { get; set; } = string.Empty;
+
+    [JsonPropertyName("data")]
+    public object? Data { get; set; }
 }

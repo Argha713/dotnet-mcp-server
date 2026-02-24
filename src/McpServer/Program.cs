@@ -1,5 +1,6 @@
 using McpServer;
 using McpServer.Configuration;
+using McpServer.Logging;
 using McpServer.Prompts;
 using McpServer.Resources;
 using McpServer.Tools;
@@ -57,6 +58,9 @@ services.Configure<SqlSettings>(configuration.GetSection(SqlSettings.SectionName
 services.Configure<HttpSettings>(configuration.GetSection(HttpSettings.SectionName));
 services.Configure<EnvironmentSettings>(configuration.GetSection(EnvironmentSettings.SectionName));
 
+// Argha - 2026-02-24 - register McpLogSink before logging so McpLoggerProvider can receive it
+services.AddSingleton<McpLogSink>();
+
 // Add logging (to stderr so it doesn't interfere with stdio protocol)
 services.AddLogging(builder =>
 {
@@ -64,6 +68,8 @@ services.AddLogging(builder =>
     {
         options.LogToStandardErrorThreshold = LogLevel.Trace;
     });
+    // Argha - 2026-02-24 - also forward logs to the MCP client via notifications/message
+    builder.Services.AddSingleton<ILoggerProvider, McpLoggerProvider>();
     builder.SetMinimumLevel(
         configuration.GetValue<LogLevel>("Logging:LogLevel:Default", LogLevel.Information));
 });

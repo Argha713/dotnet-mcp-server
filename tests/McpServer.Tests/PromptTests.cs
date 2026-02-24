@@ -231,7 +231,9 @@ public class PromptHandlerTests
             resourceProviders: Array.Empty<McpServer.Resources.IResourceProvider>(),
             promptProviders: new McpServer.Prompts.IPromptProvider[] { promptProvider },
             serverSettings: serverSettings,
-            logger: NullLogger<McpServerHandler>.Instance);
+            logger: NullLogger<McpServerHandler>.Instance,
+            // Argha - 2026-02-24 - no-op sink; writer never initialised in unit tests
+            logSink: new McpServer.Logging.McpLogSink());
     }
 
     private static string MakeRequest(string method, int id = 1, string? paramsJson = null)

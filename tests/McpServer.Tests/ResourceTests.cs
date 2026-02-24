@@ -249,7 +249,9 @@ public class ResourceHandlerTests : IDisposable
             resourceProviders: new McpServer.Resources.IResourceProvider[] { provider },
             promptProviders: Array.Empty<McpServer.Prompts.IPromptProvider>(),
             serverSettings: serverSettings,
-            logger: NullLogger<McpServerHandler>.Instance);
+            logger: NullLogger<McpServerHandler>.Instance,
+            // Argha - 2026-02-24 - no-op sink; writer never initialised in unit tests
+            logSink: new McpServer.Logging.McpLogSink());
     }
 
     public void Dispose()
