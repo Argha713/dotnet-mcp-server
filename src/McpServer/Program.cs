@@ -1,5 +1,6 @@
 using McpServer;
 using McpServer.Configuration;
+using McpServer.Resources;
 using McpServer.Tools;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -84,6 +85,9 @@ services.AddSingleton<ITool, DataTransformTool>();
 services.AddSingleton<ITool, EnvironmentTool>();
 services.AddSingleton<ITool, SystemInfoTool>();
 services.AddSingleton<ITool, GitTool>();
+
+// Argha - 2026-02-24 - register resource providers
+services.AddSingleton<IResourceProvider, FileSystemResourceProvider>();
 
 // Register MCP server
 services.AddSingleton<McpServerHandler>();

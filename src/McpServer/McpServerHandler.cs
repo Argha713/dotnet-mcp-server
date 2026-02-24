@@ -1,5 +1,6 @@
 using McpServer.Configuration;
 using McpServer.Protocol;
+using McpServer.Resources;
 using McpServer.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,6 +14,8 @@ namespace McpServer;
 public class McpServerHandler
 {
     private readonly IEnumerable<ITool> _tools;
+    // Argha - 2026-02-24 - resource providers registered alongside tools
+    private readonly IEnumerable<IResourceProvider> _resourceProviders;
     private readonly ServerSettings _serverSettings;
     private readonly ILogger<McpServerHandler> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
@@ -21,10 +24,12 @@ public class McpServerHandler
 
     public McpServerHandler(
         IEnumerable<ITool> tools,
+        IEnumerable<IResourceProvider> resourceProviders,
         IOptions<ServerSettings> serverSettings,
         ILogger<McpServerHandler> logger)
     {
         _tools = tools;
+        _resourceProviders = resourceProviders;
         _serverSettings = serverSettings.Value;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
@@ -140,6 +145,9 @@ public class McpServerHandler
             "initialize" => HandleInitialize(request),
             "tools/list" => HandleListTools(request),
             "tools/call" => await HandleToolCallAsync(request, cancellationToken),
+            // Argha - 2026-02-24 - resources protocol methods
+            "resources/list" => await HandleListResourcesAsync(request, cancellationToken),
+            "resources/read" => await HandleReadResourceAsync(request, cancellationToken),
             "ping" => HandlePing(request),
             _ => new JsonRpcResponse
             {
@@ -175,9 +183,11 @@ public class McpServerHandler
             Result = new InitializeResult
             {
                 ProtocolVersion = "2024-11-05",
+                // Argha - 2026-02-24 - advertise Resources capability
                 Capabilities = new ServerCapabilities
                 {
-                    Tools = new ToolsCapability { ListChanged = false }
+                    Tools = new ToolsCapability { ListChanged = false },
+                    Resources = new ResourcesCapability { Subscribe = false, ListChanged = false }
                 },
                 ServerInfo = new ServerInfo
                 {
@@ -284,6 +294,113 @@ public class McpServerHandler
                     },
                     IsError = true
                 }
+            };
+        }
+    }
+
+    // Argha - 2026-02-24 - aggregate resources from all registered providers
+    private async Task<JsonRpcResponse> HandleListResourcesAsync(JsonRpcRequest request, CancellationToken cancellationToken)
+    {
+        _logger.LogDebug("List resources request received");
+
+        var resources = new List<Resource>();
+        foreach (var provider in _resourceProviders)
+        {
+            var providerResources = await provider.ListResourcesAsync(cancellationToken);
+            resources.AddRange(providerResources);
+        }
+
+        return new JsonRpcResponse
+        {
+            Id = request.Id,
+            Result = new ListResourcesResult { Resources = resources }
+        };
+    }
+
+    // Argha - 2026-02-24 - route read to the provider that owns the URI scheme
+    private async Task<JsonRpcResponse> HandleReadResourceAsync(JsonRpcRequest request, CancellationToken cancellationToken)
+    {
+        if (!request.Params.HasValue)
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = "Missing params" }
+            };
+        }
+
+        var readParams = JsonSerializer.Deserialize<ReadResourceParams>(
+            request.Params.Value.GetRawText(), _jsonOptions);
+
+        if (readParams == null || string.IsNullOrEmpty(readParams.Uri))
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = "Missing uri parameter" }
+            };
+        }
+
+        _logger.LogInformation("Resource read: {Uri}", readParams.Uri);
+
+        var provider = _resourceProviders.FirstOrDefault(p => p.CanHandle(readParams.Uri));
+        if (provider == null)
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError
+                {
+                    Code = JsonRpcErrorCodes.MethodNotFound,
+                    Message = $"No resource provider for URI scheme: {readParams.Uri}"
+                }
+            };
+        }
+
+        try
+        {
+            var contents = await provider.ReadResourceAsync(readParams.Uri, cancellationToken);
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Result = new ReadResourceResult { Contents = new List<ResourceContents> { contents } }
+            };
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError
+                {
+                    Code = JsonRpcErrorCodes.InvalidParams,
+                    Message = "Access denied: path is outside allowed directories."
+                }
+            };
+        }
+        catch (FileNotFoundException ex)
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = ex.Message }
+            };
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = ex.Message }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Resource read failed: {Uri}", readParams.Uri);
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InternalError, Message = $"Error reading resource: {ex.Message}" }
             };
         }
     }

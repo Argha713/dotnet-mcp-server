@@ -203,3 +203,73 @@ public class ListToolsResult
     [JsonPropertyName("tools")]
     public List<ToolDefinition> Tools { get; set; } = new();
 }
+
+// Argha - 2026-02-24 - MCP resource models for resources/list and resources/read
+
+/// <summary>
+/// A single MCP resource (file, config, etc.) exposed by the server
+/// </summary>
+public class Resource
+{
+    [JsonPropertyName("uri")]
+    public string Uri { get; set; } = string.Empty;
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("description")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("mimeType")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? MimeType { get; set; }
+}
+
+/// <summary>
+/// resources/list response
+/// </summary>
+public class ListResourcesResult
+{
+    [JsonPropertyName("resources")]
+    public List<Resource> Resources { get; set; } = new();
+}
+
+/// <summary>
+/// resources/read request params
+/// </summary>
+public class ReadResourceParams
+{
+    [JsonPropertyName("uri")]
+    public string Uri { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Contents of a single resource (text or blob)
+/// </summary>
+public class ResourceContents
+{
+    [JsonPropertyName("uri")]
+    public string Uri { get; set; } = string.Empty;
+
+    [JsonPropertyName("mimeType")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? MimeType { get; set; }
+
+    [JsonPropertyName("text")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Text { get; set; }
+
+    [JsonPropertyName("blob")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Blob { get; set; }
+}
+
+/// <summary>
+/// resources/read response
+/// </summary>
+public class ReadResourceResult
+{
+    [JsonPropertyName("contents")]
+    public List<ResourceContents> Contents { get; set; } = new();
+}

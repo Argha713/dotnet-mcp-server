@@ -603,7 +603,8 @@ public class McpServerHandlerTests
             Version = "1.0.0"
         });
         var logger = NullLogger<McpServerHandler>.Instance;
-        _handler = new McpServerHandler(tools, serverSettings, logger);
+        // Argha - 2026-02-24 - pass empty resource providers; resources tested separately
+        _handler = new McpServerHandler(tools, Array.Empty<McpServer.Resources.IResourceProvider>(), serverSettings, logger);
     }
 
     private static string MakeRequest(string method, int id = 1, string? paramsJson = null)
@@ -738,7 +739,9 @@ public class McpServerHandlerTests
         var initMessage = MakeRequest("initialize", id: 1, paramsJson: "{\"protocolVersion\":\"2024-11-05\"}");
         await _handler.ProcessMessageAsync(initMessage, CancellationToken.None);
 
-        var message = MakeRequest("resources/list", id: 2);
+        // Argha - 2026-02-24 - resources/list is now a real method; use a genuinely unknown method instead
+        // var message = MakeRequest("resources/list", id: 2);
+        var message = MakeRequest("unknown/notarealmethod", id: 2);
         var response = await _handler.ProcessMessageAsync(message, CancellationToken.None);
 
         response.Should().NotBeNull();
