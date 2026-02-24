@@ -677,7 +677,7 @@ dotnet run 2> log.txt
 - [x] Resources support (`resources/list`, `resources/read`)
 - [x] Prompts support (`prompts/list`, `prompts/get`) with built-in templates
 - [x] Logging protocol (`logging/setLevel`, `notifications/message`)
-- [ ] Progress notifications for long-running operations
+- [x] Progress notifications for long-running operations
 
 ### Phase 5 — Developer Experience
 - [ ] Plugin architecture (drop-in tool DLLs from `/plugins` folder)

@@ -1,3 +1,4 @@
+using McpServer.Progress;
 using McpServer.Protocol;
 using McpServer.Configuration;
 using Microsoft.Extensions.Options;
@@ -51,7 +52,8 @@ public class FileSystemTool : ITool
         Required = new List<string> { "action" }
     };
 
-    public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken = default)
+    // Argha - 2026-02-24 - added IProgressReporter; used by read and search sub-operations
+    public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -59,9 +61,9 @@ public class FileSystemTool : ITool
 
             var result = action.ToLower() switch
             {
-                "read" => await ReadFileAsync(arguments, cancellationToken),
+                "read" => await ReadFileAsync(arguments, progress, cancellationToken),
                 "list" => ListDirectory(arguments),
-                "search" => SearchFiles(arguments),
+                "search" => SearchFiles(arguments, progress),
                 "info" => GetFileInfo(arguments),
                 "allowed_paths" => GetAllowedPaths(),
                 _ => $"Unknown action: {action}. Use 'read', 'list', 'search', 'info', or 'allowed_paths'."
@@ -99,7 +101,8 @@ public class FileSystemTool : ITool
         }
     }
 
-    private async Task<string> ReadFileAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken)
+    // Argha - 2026-02-24 - progress added: 0=start, fileInfo.Length=done (units: bytes)
+    private async Task<string> ReadFileAsync(Dictionary<string, object>? arguments, IProgressReporter? progress, CancellationToken cancellationToken)
     {
         var path = GetStringArg(arguments, "path");
         if (string.IsNullOrEmpty(path))
@@ -112,13 +115,16 @@ public class FileSystemTool : ITool
             return $"Error: File not found: {path}";
 
         var fileInfo = new FileInfo(fullPath);
-        
+
         // Limit file size for reading
         const long maxSize = 1024 * 1024; // 1 MB
         if (fileInfo.Length > maxSize)
             return $"Error: File too large ({fileInfo.Length / 1024}KB). Maximum size is {maxSize / 1024}KB.";
 
+        progress?.Report(0, fileInfo.Length);
         var content = await File.ReadAllTextAsync(fullPath, cancellationToken);
+        // Argha - 2026-02-24 - report full size on completion so client progress bar reaches 100%
+        progress?.Report(fileInfo.Length, fileInfo.Length);
         return $"File: {path}\nSize: {fileInfo.Length} bytes\n\n--- Content ---\n{content}";
     }
 
@@ -159,7 +165,8 @@ public class FileSystemTool : ITool
         return $"Contents of '{path}':\n{string.Join("\n", entries)}";
     }
 
-    private string SearchFiles(Dictionary<string, object>? arguments)
+    // Argha - 2026-02-24 - progress added: reports files found so far every 10 files (total unknown)
+    private string SearchFiles(Dictionary<string, object>? arguments, IProgressReporter? progress)
     {
         var path = GetStringArg(arguments, "path") ?? _settings.AllowedPaths.FirstOrDefault() ?? ".";
         var pattern = GetStringArg(arguments, "pattern") ?? "*.*";
@@ -172,9 +179,18 @@ public class FileSystemTool : ITool
             return $"Error: Directory not found: {path}";
 
         var searchOption = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-        var files = Directory.GetFiles(fullPath, pattern, searchOption)
-            .Take(100) // Limit results
-            .ToList();
+        var files = new List<string>();
+        var scanned = 0;
+        foreach (var file in Directory.EnumerateFiles(fullPath, pattern, searchOption))
+        {
+            files.Add(file);
+            scanned++;
+            // Argha - 2026-02-24 - total is unknown for search; omit second arg so client shows open-ended spinner
+            if (scanned % 10 == 0)
+                progress?.Report(scanned);
+            if (scanned >= 100)
+                break; // Limit results
+        }
 
         if (files.Count == 0)
             return $"No files matching '{pattern}' found in '{path}'.";

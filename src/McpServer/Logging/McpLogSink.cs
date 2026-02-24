@@ -89,6 +89,34 @@ public class McpLogSink
         }
     }
 
+    // Argha - 2026-02-24 - writes a notifications/progress JSON line to stdout inside the same lock as WriteLog
+    // so progress lines are never interleaved with response lines
+    /// <summary>
+    /// Emits a notifications/progress JSON-RPC notification on stdout.
+    /// Safe to call from any thread; acquires the shared write lock internally.
+    /// </summary>
+    public void WriteProgress(string progressToken, double progress, double? total)
+    {
+        lock (_lock)
+        {
+            if (_writer == null) return;
+
+            var notification = new ProgressNotification
+            {
+                Params = new ProgressParams
+                {
+                    ProgressToken = progressToken,
+                    Progress = progress,
+                    Total = total
+                }
+            };
+
+            var json = JsonSerializer.Serialize(notification, _jsonOptions);
+            _writer.WriteLine(json);
+            _writer.Flush();
+        }
+    }
+
     // Argha - 2026-02-24 - maps .NET LogLevel to MCP syslog-style level
     // Trace and Debug both map to MCP "debug" (no finer grain in MCP spec)
     private static McpLogLevel MapToMcpLevel(LogLevel logLevel) => logLevel switch

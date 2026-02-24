@@ -1,3 +1,4 @@
+using McpServer.Progress;
 using McpServer.Protocol;
 using McpServer.Configuration;
 using Microsoft.Extensions.Options;
@@ -54,7 +55,8 @@ public class HttpTool : ITool
         Required = new List<string> { "action" }
     };
 
-    public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken = default)
+    // Argha - 2026-02-24 - added IProgressReporter; used by get/post to signal request lifecycle stages
+    public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -62,8 +64,8 @@ public class HttpTool : ITool
 
             var result = action.ToLower() switch
             {
-                "get" => await ExecuteGetAsync(arguments, cancellationToken),
-                "post" => await ExecutePostAsync(arguments, cancellationToken),
+                "get" => await ExecuteGetAsync(arguments, progress, cancellationToken),
+                "post" => await ExecutePostAsync(arguments, progress, cancellationToken),
                 "allowed_hosts" => GetAllowedHosts(),
                 _ => $"Unknown action: {action}. Use 'get', 'post', or 'allowed_hosts'."
             };
@@ -103,7 +105,8 @@ public class HttpTool : ITool
         return sb.ToString();
     }
 
-    private async Task<string> ExecuteGetAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken)
+    // Argha - 2026-02-24 - progress: 0=starting request, 50=response received, 100=body read
+    private async Task<string> ExecuteGetAsync(Dictionary<string, object>? arguments, IProgressReporter? progress, CancellationToken cancellationToken)
     {
         var url = GetStringArg(arguments, "url");
         if (string.IsNullOrEmpty(url))
@@ -111,14 +114,21 @@ public class HttpTool : ITool
 
         ValidateUrl(url);
 
+        progress?.Report(0);
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         AddHeaders(request, arguments);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
-        return await FormatResponseAsync(response, cancellationToken);
+        // Argha - 2026-02-24 - use Content-Length as total when available
+        var contentLength = response.Content.Headers.ContentLength;
+        progress?.Report(50, contentLength.HasValue ? (double)contentLength.Value : null);
+        var result = await FormatResponseAsync(response, cancellationToken);
+        progress?.Report(100);
+        return result;
     }
 
-    private async Task<string> ExecutePostAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken)
+    // Argha - 2026-02-24 - progress: 0=starting request, 50=response received, 100=body read
+    private async Task<string> ExecutePostAsync(Dictionary<string, object>? arguments, IProgressReporter? progress, CancellationToken cancellationToken)
     {
         var url = GetStringArg(arguments, "url");
         var body = GetStringArg(arguments, "body");
@@ -128,6 +138,7 @@ public class HttpTool : ITool
 
         ValidateUrl(url);
 
+        progress?.Report(0);
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         AddHeaders(request, arguments);
 
@@ -137,7 +148,11 @@ public class HttpTool : ITool
         }
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
-        return await FormatResponseAsync(response, cancellationToken);
+        var contentLength = response.Content.Headers.ContentLength;
+        progress?.Report(50, contentLength.HasValue ? (double)contentLength.Value : null);
+        var result = await FormatResponseAsync(response, cancellationToken);
+        progress?.Report(100);
+        return result;
     }
 
     private void ValidateUrl(string url)

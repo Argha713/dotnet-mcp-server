@@ -1,3 +1,4 @@
+using McpServer.Progress;
 using McpServer.Protocol;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -57,7 +58,8 @@ public class TextTool : ITool
         Required = new List<string> { "action" }
     };
 
-    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken = default)
+    // Argha - 2026-02-24 - progress not used; text operations complete synchronously
+    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {

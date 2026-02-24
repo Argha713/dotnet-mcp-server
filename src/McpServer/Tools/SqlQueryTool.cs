@@ -1,3 +1,4 @@
+using McpServer.Progress;
 using McpServer.Protocol;
 using McpServer.Configuration;
 using Microsoft.Extensions.Options;
@@ -58,7 +59,8 @@ public class SqlQueryTool : ITool
         Required = new List<string> { "action" }
     };
 
-    public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken = default)
+    // Argha - 2026-02-24 - added IProgressReporter; used by ExecuteQueryAsync to emit per-row notifications
+    public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -66,7 +68,7 @@ public class SqlQueryTool : ITool
 
             var result = action.ToLower() switch
             {
-                "query" => await ExecuteQueryAsync(arguments, cancellationToken),
+                "query" => await ExecuteQueryAsync(arguments, progress, cancellationToken),
                 "list_databases" => ListDatabases(),
                 "list_tables" => await ListTablesAsync(arguments, cancellationToken),
                 "describe_table" => await DescribeTableAsync(arguments, cancellationToken),
@@ -107,7 +109,8 @@ public class SqlQueryTool : ITool
         return sb.ToString();
     }
 
-    private async Task<string> ExecuteQueryAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken)
+    // Argha - 2026-02-24 - progress added; reports every 50 rows to avoid notification flood
+    private async Task<string> ExecuteQueryAsync(Dictionary<string, object>? arguments, IProgressReporter? progress, CancellationToken cancellationToken)
     {
         var dbName = GetStringArg(arguments, "database");
         var query = GetStringArg(arguments, "query");
@@ -149,6 +152,8 @@ public class SqlQueryTool : ITool
         sb.AppendLine(new string('-', columns.Sum(c => c.Length) + (columns.Count - 1) * 3));
 
         // Data rows
+        // Argha - 2026-02-24 - emit progress(0) at start so client knows work has begun
+        progress?.Report(0, maxRows);
         var rowCount = 0;
         while (await reader.ReadAsync(cancellationToken) && rowCount < maxRows)
         {
@@ -160,7 +165,12 @@ public class SqlQueryTool : ITool
             }
             sb.AppendLine(string.Join(" | ", values));
             rowCount++;
+            // Argha - 2026-02-24 - throttle to every 50 rows to avoid flooding the client with notifications
+            if (rowCount % 50 == 0)
+                progress?.Report(rowCount, maxRows);
         }
+        // Argha - 2026-02-24 - final progress after loop — signals completion to client
+        progress?.Report(rowCount, maxRows);
 
         var moreRows = await reader.ReadAsync(cancellationToken);
         var footer = moreRows ? $"\n... (showing {maxRows} of more rows)" : $"\n({rowCount} row(s))";

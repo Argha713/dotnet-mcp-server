@@ -1,3 +1,4 @@
+using McpServer.Progress;
 using McpServer.Protocol;
 
 namespace McpServer.Tools;
@@ -41,7 +42,8 @@ public class DateTimeTool : ITool
         Required = new List<string> { "action" }
     };
 
-    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken = default)
+    // Argha - 2026-02-24 - progress not used; datetime actions complete instantly
+    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {

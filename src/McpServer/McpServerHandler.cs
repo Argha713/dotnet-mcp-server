@@ -1,5 +1,6 @@
 using McpServer.Configuration;
 using McpServer.Logging;
+using McpServer.Progress;
 using McpServer.Prompts;
 using McpServer.Protocol;
 using McpServer.Resources;
@@ -290,9 +291,15 @@ public class McpServerHandler
         // Convert JsonElement values to proper types
         var arguments = ConvertArguments(callParams.Arguments);
 
+        // Argha - 2026-02-24 - extract progressToken from _meta; create real reporter if present, no-op otherwise
+        var progressToken = callParams.Meta?.ProgressToken;
+        IProgressReporter progressReporter = !string.IsNullOrEmpty(progressToken)
+            ? new ProgressReporter(progressToken, _logSink)
+            : NullProgressReporter.Instance;
+
         try
         {
-            var result = await tool.ExecuteAsync(arguments, cancellationToken);
+            var result = await tool.ExecuteAsync(arguments, progressReporter, cancellationToken);
             
             return new JsonRpcResponse
             {

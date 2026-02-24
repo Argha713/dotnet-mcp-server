@@ -1,4 +1,5 @@
 using McpServer.Configuration;
+using McpServer.Progress;
 using McpServer.Protocol;
 using Microsoft.Extensions.Options;
 
@@ -75,7 +76,8 @@ public class EnvironmentTool : ITool
         Required = new List<string> { "action" }
     };
 
-    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken = default)
+    // Argha - 2026-02-24 - progress not used; environment read operations complete instantly
+    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {

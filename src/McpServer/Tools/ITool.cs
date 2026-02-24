@@ -1,3 +1,4 @@
+using McpServer.Progress;
 using McpServer.Protocol;
 
 namespace McpServer.Tools;
@@ -22,8 +23,10 @@ public interface ITool
     /// </summary>
     JsonSchema InputSchema { get; }
 
+    // Argha - 2026-02-24 - added IProgressReporter? progress parameter for MCP progress notifications
     /// <summary>
-    /// Execute the tool with given arguments
+    /// Execute the tool with given arguments.
+    /// Pass a real IProgressReporter when the client supplied a progressToken; otherwise null (NullProgressReporter).
     /// </summary>
-    Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken = default);
+    Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default);
 }

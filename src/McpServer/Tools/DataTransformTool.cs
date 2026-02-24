@@ -1,3 +1,4 @@
+using McpServer.Progress;
 using McpServer.Protocol;
 using System.Security.Cryptography;
 using System.Text;
@@ -57,7 +58,8 @@ public class DataTransformTool : ITool
         Required = new List<string> { "action" }
     };
 
-    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken = default)
+    // Argha - 2026-02-24 - progress not used; data transform operations complete synchronously
+    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {

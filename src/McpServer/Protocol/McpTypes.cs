@@ -168,6 +168,55 @@ public class ToolCallParams
 
     [JsonPropertyName("arguments")]
     public Dictionary<string, object>? Arguments { get; set; }
+
+    // Argha - 2026-02-24 - _meta carries optional progressToken from the client (MCP progress protocol)
+    [JsonPropertyName("_meta")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ToolCallMeta? Meta { get; set; }
+}
+
+// Argha - 2026-02-24 - MCP _meta block on tools/call requests; carries progressToken when client wants progress notifications
+/// <summary>
+/// Optional metadata on tools/call requests; clients set progressToken to request progress notifications.
+/// </summary>
+public class ToolCallMeta
+{
+    [JsonPropertyName("progressToken")]
+    public string? ProgressToken { get; set; }
+}
+
+// Argha - 2026-02-24 - MCP notifications/progress protocol types (sent by server during long-running tool calls)
+
+/// <summary>
+/// A JSON-RPC notification emitted by the server during a long-running tool call.
+/// No id — no response expected by the client.
+/// </summary>
+public class ProgressNotification
+{
+    [JsonPropertyName("jsonrpc")]
+    public string JsonRpc { get; set; } = "2.0";
+
+    [JsonPropertyName("method")]
+    public string Method { get; set; } = "notifications/progress";
+
+    [JsonPropertyName("params")]
+    public ProgressParams Params { get; set; } = new();
+}
+
+/// <summary>
+/// Params payload inside notifications/progress
+/// </summary>
+public class ProgressParams
+{
+    [JsonPropertyName("progressToken")]
+    public string ProgressToken { get; set; } = string.Empty;
+
+    [JsonPropertyName("progress")]
+    public double Progress { get; set; }
+
+    [JsonPropertyName("total")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? Total { get; set; }
 }
 
 /// <summary>

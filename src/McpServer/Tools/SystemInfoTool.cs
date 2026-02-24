@@ -1,3 +1,4 @@
+using McpServer.Progress;
 using McpServer.Protocol;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
@@ -47,7 +48,8 @@ public class SystemInfoTool : ITool
         Required = new List<string> { "action" }
     };
 
-    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken = default)
+    // Argha - 2026-02-24 - progress not used; system info collection is near-instant
+    public Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {
