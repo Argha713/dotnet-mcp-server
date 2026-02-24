@@ -273,3 +273,96 @@ public class ReadResourceResult
     [JsonPropertyName("contents")]
     public List<ResourceContents> Contents { get; set; } = new();
 }
+
+// Argha - 2026-02-24 - MCP prompt models for prompts/list and prompts/get
+
+/// <summary>
+/// Describes a single argument accepted by a prompt template
+/// </summary>
+public class PromptArgument
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("description")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("required")]
+    public bool Required { get; set; } = false;
+}
+
+/// <summary>
+/// A named, parameterized prompt template exposed by the server
+/// </summary>
+public class Prompt
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("description")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("arguments")]
+    public List<PromptArgument> Arguments { get; set; } = new();
+}
+
+/// <summary>
+/// prompts/list response
+/// </summary>
+public class ListPromptsResult
+{
+    [JsonPropertyName("prompts")]
+    public List<Prompt> Prompts { get; set; } = new();
+}
+
+/// <summary>
+/// prompts/get request params
+/// </summary>
+public class GetPromptParams
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("arguments")]
+    public Dictionary<string, string>? Arguments { get; set; }
+}
+
+/// <summary>
+/// The content block inside a prompt message (text only for built-in prompts)
+/// </summary>
+public class PromptMessageContent
+{
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = "text";
+
+    [JsonPropertyName("text")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Text { get; set; }
+}
+
+/// <summary>
+/// A single rendered message in a prompt result
+/// </summary>
+public class PromptMessage
+{
+    [JsonPropertyName("role")]
+    public string Role { get; set; } = "user";
+
+    [JsonPropertyName("content")]
+    public PromptMessageContent Content { get; set; } = new();
+}
+
+/// <summary>
+/// prompts/get response
+/// </summary>
+public class GetPromptResult
+{
+    [JsonPropertyName("description")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("messages")]
+    public List<PromptMessage> Messages { get; set; } = new();
+}

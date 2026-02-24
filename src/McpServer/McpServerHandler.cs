@@ -1,4 +1,5 @@
 using McpServer.Configuration;
+using McpServer.Prompts;
 using McpServer.Protocol;
 using McpServer.Resources;
 using McpServer.Tools;
@@ -16,6 +17,8 @@ public class McpServerHandler
     private readonly IEnumerable<ITool> _tools;
     // Argha - 2026-02-24 - resource providers registered alongside tools
     private readonly IEnumerable<IResourceProvider> _resourceProviders;
+    // Argha - 2026-02-24 - prompt providers for prompts/list and prompts/get
+    private readonly IEnumerable<IPromptProvider> _promptProviders;
     private readonly ServerSettings _serverSettings;
     private readonly ILogger<McpServerHandler> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
@@ -25,11 +28,13 @@ public class McpServerHandler
     public McpServerHandler(
         IEnumerable<ITool> tools,
         IEnumerable<IResourceProvider> resourceProviders,
+        IEnumerable<IPromptProvider> promptProviders,
         IOptions<ServerSettings> serverSettings,
         ILogger<McpServerHandler> logger)
     {
         _tools = tools;
         _resourceProviders = resourceProviders;
+        _promptProviders = promptProviders;
         _serverSettings = serverSettings.Value;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
@@ -148,6 +153,9 @@ public class McpServerHandler
             // Argha - 2026-02-24 - resources protocol methods
             "resources/list" => await HandleListResourcesAsync(request, cancellationToken),
             "resources/read" => await HandleReadResourceAsync(request, cancellationToken),
+            // Argha - 2026-02-24 - prompts protocol methods
+            "prompts/list" => await HandleListPromptsAsync(request, cancellationToken),
+            "prompts/get" => await HandleGetPromptAsync(request, cancellationToken),
             "ping" => HandlePing(request),
             _ => new JsonRpcResponse
             {
@@ -183,11 +191,12 @@ public class McpServerHandler
             Result = new InitializeResult
             {
                 ProtocolVersion = "2024-11-05",
-                // Argha - 2026-02-24 - advertise Resources capability
+                // Argha - 2026-02-24 - advertise Resources and Prompts capabilities
                 Capabilities = new ServerCapabilities
                 {
                     Tools = new ToolsCapability { ListChanged = false },
-                    Resources = new ResourcesCapability { Subscribe = false, ListChanged = false }
+                    Resources = new ResourcesCapability { Subscribe = false, ListChanged = false },
+                    Prompts = new PromptsCapability { ListChanged = false }
                 },
                 ServerInfo = new ServerInfo
                 {
@@ -401,6 +410,84 @@ public class McpServerHandler
             {
                 Id = request.Id,
                 Error = new JsonRpcError { Code = JsonRpcErrorCodes.InternalError, Message = $"Error reading resource: {ex.Message}" }
+            };
+        }
+    }
+
+    // Argha - 2026-02-24 - aggregate prompts from all registered providers
+    private async Task<JsonRpcResponse> HandleListPromptsAsync(JsonRpcRequest request, CancellationToken cancellationToken)
+    {
+        _logger.LogDebug("List prompts request received");
+
+        var prompts = new List<Prompt>();
+        foreach (var provider in _promptProviders)
+        {
+            var providerPrompts = await provider.ListPromptsAsync(cancellationToken);
+            prompts.AddRange(providerPrompts);
+        }
+
+        return new JsonRpcResponse
+        {
+            Id = request.Id,
+            Result = new ListPromptsResult { Prompts = prompts }
+        };
+    }
+
+    // Argha - 2026-02-24 - route get to the provider that owns the prompt name
+    private async Task<JsonRpcResponse> HandleGetPromptAsync(JsonRpcRequest request, CancellationToken cancellationToken)
+    {
+        if (!request.Params.HasValue)
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = "Missing params" }
+            };
+        }
+
+        var getParams = JsonSerializer.Deserialize<GetPromptParams>(
+            request.Params.Value.GetRawText(), _jsonOptions);
+
+        if (getParams == null || string.IsNullOrEmpty(getParams.Name))
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = "Missing name parameter" }
+            };
+        }
+
+        _logger.LogInformation("Prompt get: {Name}", getParams.Name);
+
+        var provider = _promptProviders.FirstOrDefault(p => p.CanHandle(getParams.Name));
+        if (provider == null)
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError
+                {
+                    Code = JsonRpcErrorCodes.MethodNotFound,
+                    Message = $"Prompt not found: {getParams.Name}"
+                }
+            };
+        }
+
+        try
+        {
+            var result = await provider.GetPromptAsync(getParams.Name, getParams.Arguments, cancellationToken);
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Result = result
+            };
+        }
+        catch (ArgumentException ex)
+        {
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Error = new JsonRpcError { Code = JsonRpcErrorCodes.InvalidParams, Message = ex.Message }
             };
         }
     }

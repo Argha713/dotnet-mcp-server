@@ -603,8 +603,8 @@ public class McpServerHandlerTests
             Version = "1.0.0"
         });
         var logger = NullLogger<McpServerHandler>.Instance;
-        // Argha - 2026-02-24 - pass empty resource providers; resources tested separately
-        _handler = new McpServerHandler(tools, Array.Empty<McpServer.Resources.IResourceProvider>(), serverSettings, logger);
+        // Argha - 2026-02-24 - pass empty resource and prompt providers; tested separately
+        _handler = new McpServerHandler(tools, Array.Empty<McpServer.Resources.IResourceProvider>(), Array.Empty<McpServer.Prompts.IPromptProvider>(), serverSettings, logger);
     }
 
     private static string MakeRequest(string method, int id = 1, string? paramsJson = null)

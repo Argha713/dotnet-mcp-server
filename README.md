@@ -674,8 +674,8 @@ dotnet run 2> log.txt
 - [x] `--validate` health check for all configured connections
 
 ### Phase 4 — MCP Protocol Completeness
-- [ ] Resources support (`resources/list`, `resources/read`)
-- [ ] Prompts support (`prompts/list`, `prompts/get`) with built-in templates
+- [x] Resources support (`resources/list`, `resources/read`)
+- [x] Prompts support (`prompts/list`, `prompts/get`) with built-in templates
 - [ ] Logging protocol (`logging/setLevel`, `notifications/message`)
 - [ ] Progress notifications for long-running operations
 

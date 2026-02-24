@@ -247,6 +247,7 @@ public class ResourceHandlerTests : IDisposable
         _handler = new McpServerHandler(
             tools: Array.Empty<McpServer.Tools.ITool>(),
             resourceProviders: new McpServer.Resources.IResourceProvider[] { provider },
+            promptProviders: Array.Empty<McpServer.Prompts.IPromptProvider>(),
             serverSettings: serverSettings,
             logger: NullLogger<McpServerHandler>.Instance);
     }

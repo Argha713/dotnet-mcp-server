@@ -1,5 +1,6 @@
 using McpServer;
 using McpServer.Configuration;
+using McpServer.Prompts;
 using McpServer.Resources;
 using McpServer.Tools;
 using Microsoft.Extensions.Configuration;
@@ -88,6 +89,9 @@ services.AddSingleton<ITool, GitTool>();
 
 // Argha - 2026-02-24 - register resource providers
 services.AddSingleton<IResourceProvider, FileSystemResourceProvider>();
+
+// Argha - 2026-02-24 - register built-in prompt provider
+services.AddSingleton<IPromptProvider, BuiltInPromptProvider>();
 
 // Register MCP server
 services.AddSingleton<McpServerHandler>();
