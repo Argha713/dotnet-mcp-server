@@ -1,0 +1,95 @@
+site_name: dotnet-mcp-server
+site_description: A .NET 8 MCP server that exposes enterprise tools (filesystem, SQL, HTTP, git, and more) to AI assistants via JSON-RPC 2.0.
+site_url: https://argha713.github.io/dotnet-mcp-server
+repo_url: https://github.com/Argha713/dotnet-mcp-server
+repo_name: Argha713/dotnet-mcp-server
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Configuration: getting-started/configuration.md
+    - Connecting Clients: getting-started/clients.md
+  - Tools:
+    - Overview: tools/index.md
+    - DateTime: tools/datetime.md
+    - FileSystem: tools/filesystem.md
+    - SQL Query: tools/sql.md
+    - HTTP Request: tools/http.md
+    - Text: tools/text.md
+    - Data Transform: tools/data-transform.md
+    - Environment: tools/environment.md
+    - System Info: tools/system-info.md
+    - Git: tools/git.md
+  - Configuration:
+    - Profiles: configuration/profiles.md
+    - Security Constraints: configuration/security.md
+  - Plugins:
+    - Overview: plugins/index.md
+    - Quickstart: plugins/quickstart.md
+    - API Reference: plugins/api-reference.md
+    - Examples: plugins/examples.md
+  - Deployment:
+    - Docker: deployment/docker.md
+    - CI/CD: deployment/ci-cd.md
+  - Contributing: contributing.md
+  - Roadmap: roadmap.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Argha713/dotnet-mcp-server
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/argha-sarkar-12538a21a
+
+copyright: Copyright &copy; 2026 Argha Sarkar — MIT License

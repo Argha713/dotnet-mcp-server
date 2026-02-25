@@ -53,6 +53,9 @@ artifacts/
 *.trx
 [Cc]overage[Rr]eport/
 
+# MkDocs build output
+site/
+
 # OS files
 .DS_Store
 Thumbs.db

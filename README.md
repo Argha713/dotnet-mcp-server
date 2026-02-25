@@ -10,6 +10,8 @@ A **Model Context Protocol (MCP)** server built with **.NET 8** that exposes ent
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![CI](https://github.com/Argha713/dotnet-mcp-server/actions/workflows/ci.yml/badge.svg)
 
+📖 **[Full Documentation](https://argha713.github.io/dotnet-mcp-server)** — Getting Started, Tool Reference, Plugin Guide
+
 ---
 
 ## What is MCP?
@@ -756,10 +758,10 @@ dotnet run 2> log.txt
 - [x] Logging protocol (`logging/setLevel`, `notifications/message`)
 - [x] Progress notifications for long-running operations
 
-### Phase 5 — Developer Experience ✅ (partial)
+### Phase 5 — Developer Experience ✅
 - [x] Plugin architecture (drop-in tool DLLs from `/plugins` folder)
 - [x] `dotnet new mcp-tool` project template for custom tools
-- [ ] Documentation site (Getting Started, Tool Reference, Custom Tools guide)
+- [x] Documentation site (Getting Started, Tool Reference, Plugin Guide) — https://argha713.github.io/dotnet-mcp-server
 - [x] Example configurations (`developer.json`, `data-analyst.json`, `api-integrator.json`)
 - [x] `CONTRIBUTING.md` + issue templates
 
