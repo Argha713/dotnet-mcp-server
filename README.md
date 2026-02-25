@@ -466,6 +466,20 @@ Ask Claude:
 
 ## Configuration Reference
 
+### Example Profiles
+
+Ready-to-use configuration files are provided in [`examples/configs/`](examples/configs/):
+
+| File | Best for |
+|------|----------|
+| [`developer.json`](examples/configs/developer.json) | Software developers — local repos, dev DBs, GitHub/npm/docs APIs |
+| [`data-analyst.json`](examples/configs/data-analyst.json) | Data analysts — data directories, analytics DBs, public data APIs |
+| [`api-integrator.json`](examples/configs/api-integrator.json) | API integrators — broad external API access, minimal filesystem |
+
+Copy one of these to your config directory and edit to match your environment.
+
+---
+
 ### File System Settings
 
 ```json
@@ -575,6 +589,12 @@ dotnet-mcp-server/
 │   └── McpServer.Tests/        # Unit tests
 ├── docker/
 │   └── appsettings.example.json  # Docker config template
+├── examples/
+│   ├── configs/
+│   │   ├── developer.json        # Developer profile
+│   │   ├── data-analyst.json     # Data analyst profile
+│   │   └── api-integrator.json   # API integrator profile
+│   └── SamplePlugin/             # Reference plugin implementation
 ├── Dockerfile                  # Multi-stage Alpine build
 ├── docker-compose.yml          # mcp-server + SQL Server 2022
 ├── .env.example                # SQL SA password template
@@ -740,7 +760,7 @@ dotnet run 2> log.txt
 - [x] Plugin architecture (drop-in tool DLLs from `/plugins` folder)
 - [x] `dotnet new mcp-tool` project template for custom tools
 - [ ] Documentation site (Getting Started, Tool Reference, Custom Tools guide)
-- [ ] Example configurations (`developer.json`, `data-analyst.json`, `api-integrator.json`)
+- [x] Example configurations (`developer.json`, `data-analyst.json`, `api-integrator.json`)
 - [ ] `CONTRIBUTING.md` + issue templates
 
 ### Phase 6 — Advanced Features

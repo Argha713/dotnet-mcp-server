@@ -1,0 +1,61 @@
+{
+  "_comment": "Argha - 2026-02-25 - Developer profile: local repos, dev DBs, GitHub/npm/docs APIs",
+  "Server": {
+    "Name": "dotnet-mcp-server",
+    "Version": "1.0.0"
+  },
+
+  "FileSystem": {
+    "AllowedPaths": [
+      "C:\\Users\\YourUsername\\source\\repos",
+      "C:\\Users\\YourUsername\\Documents",
+      "C:\\Projects",
+      "C:\\Temp"
+    ]
+  },
+
+  "Sql": {
+    "Connections": {
+      "LocalDev": {
+        "ConnectionString": "Server=localhost;Database=DevDB;Trusted_Connection=True;TrustServerCertificate=True;",
+        "Description": "Local development SQL Server"
+      },
+      "LocalSqlite": {
+        "ConnectionString": "Server=localhost;Database=AppDb_Dev;Trusted_Connection=True;TrustServerCertificate=True;",
+        "Description": "Dev application database"
+      }
+    }
+  },
+
+  "Http": {
+    "AllowedHosts": [
+      "api.github.com",
+      "raw.githubusercontent.com",
+      "registry.npmjs.org",
+      "pypi.org",
+      "nuget.org",
+      "api.nuget.org",
+      "docs.microsoft.com",
+      "learn.microsoft.com",
+      "httpbin.org"
+    ],
+    "TimeoutSeconds": 30
+  },
+
+  "Environment": {
+    "AdditionalBlockedVariables": []
+  },
+
+  "Plugins": {
+    "Enabled": true,
+    "Directory": "plugins",
+    "Config": {}
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "McpServer": "Debug"
+    }
+  }
+}

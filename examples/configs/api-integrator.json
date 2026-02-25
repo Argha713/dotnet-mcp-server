@@ -1,0 +1,57 @@
+{
+  "_comment": "Argha - 2026-02-25 - API Integrator profile: broad API access, minimal filesystem, no SQL",
+  "Server": {
+    "Name": "dotnet-mcp-server",
+    "Version": "1.0.0"
+  },
+
+  "FileSystem": {
+    "AllowedPaths": [
+      "C:\\Users\\YourUsername\\Downloads",
+      "C:\\Temp"
+    ]
+  },
+
+  "Sql": {
+    "Connections": {}
+  },
+
+  "Http": {
+    "AllowedHosts": [
+      "api.github.com",
+      "api.stripe.com",
+      "api.sendgrid.com",
+      "api.twilio.com",
+      "api.openai.com",
+      "hooks.slack.com",
+      "api.notion.com",
+      "api.airtable.com",
+      "api.hubapi.com",
+      "graph.microsoft.com",
+      "login.microsoftonline.com",
+      "jsonplaceholder.typicode.com",
+      "httpbin.org"
+    ],
+    "TimeoutSeconds": 30
+  },
+
+  "Environment": {
+    "AdditionalBlockedVariables": []
+  },
+
+  "Plugins": {
+    "Enabled": true,
+    "Directory": "plugins",
+    "Config": {
+      "DefaultApiTimeout": "30",
+      "RetryCount": "3"
+    }
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "McpServer": "Information"
+    }
+  }
+}

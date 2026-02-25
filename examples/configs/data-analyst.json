@@ -1,0 +1,64 @@
+{
+  "_comment": "Argha - 2026-02-25 - Data Analyst profile: data dirs, analytics DBs, data/stats APIs",
+  "Server": {
+    "Name": "dotnet-mcp-server",
+    "Version": "1.0.0"
+  },
+
+  "FileSystem": {
+    "AllowedPaths": [
+      "C:\\Users\\YourUsername\\Downloads",
+      "C:\\Users\\YourUsername\\Documents\\Reports",
+      "C:\\Data",
+      "C:\\Exports"
+    ]
+  },
+
+  "Sql": {
+    "Connections": {
+      "DataWarehouse": {
+        "ConnectionString": "Server=dw-server;Database=DataWarehouse;Trusted_Connection=True;TrustServerCertificate=True;",
+        "Description": "Corporate data warehouse (read-only)"
+      },
+      "Analytics": {
+        "ConnectionString": "Server=analytics-server;Database=AnalyticsDB;User Id=analyst;Password=YOUR_PASSWORD;TrustServerCertificate=True;",
+        "Description": "Analytics reporting database"
+      },
+      "Staging": {
+        "ConnectionString": "Server=localhost;Database=StagingDB;Trusted_Connection=True;TrustServerCertificate=True;",
+        "Description": "Local staging / scratch database"
+      }
+    }
+  },
+
+  "Http": {
+    "AllowedHosts": [
+      "data.worldbank.org",
+      "api.worldbank.org",
+      "data.gov",
+      "api.census.gov",
+      "fred.stlouisfed.org",
+      "api.exchangerate-api.com",
+      "opendata.cbs.nl",
+      "stats.oecd.org"
+    ],
+    "TimeoutSeconds": 60
+  },
+
+  "Environment": {
+    "AdditionalBlockedVariables": []
+  },
+
+  "Plugins": {
+    "Enabled": true,
+    "Directory": "plugins",
+    "Config": {}
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "McpServer": "Information"
+    }
+  }
+}
