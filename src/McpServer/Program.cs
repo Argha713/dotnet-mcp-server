@@ -87,7 +87,7 @@ services.AddSingleton<ITool, DateTimeTool>();
 services.AddSingleton<ITool, FileSystemTool>();
 services.AddSingleton<ITool, SqlQueryTool>();
 services.AddSingleton<ITool, HttpTool>();
-// Argha - 2026-02-18 - Phase 2 new tools
+// Argha - 2026-02-18 - new tools
 services.AddSingleton<ITool, TextTool>();
 services.AddSingleton<ITool, DataTransformTool>();
 services.AddSingleton<ITool, EnvironmentTool>();
