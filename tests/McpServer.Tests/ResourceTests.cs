@@ -257,7 +257,9 @@ public class ResourceHandlerTests : IDisposable
             // Argha - 2026-02-25 - Phase 6.3: no-op rate limiter for unit tests
             rateLimiter: McpServer.RateLimiting.NullRateLimiter.Instance,
             // Argha - 2026-02-25 - Phase 6.4: no-op cache for unit tests
-            responseCache: McpServer.Caching.NullResponseCache.Instance);
+            responseCache: McpServer.Caching.NullResponseCache.Instance,
+            // Argha - 2026-02-25 - Phase 7: no-op auth for unit tests
+            authorizationService: McpServer.Auth.NullAuthorizationService.Instance);
     }
 
     public void Dispose()

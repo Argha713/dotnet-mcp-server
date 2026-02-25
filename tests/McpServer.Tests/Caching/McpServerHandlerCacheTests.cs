@@ -1,6 +1,7 @@
 // Argha - 2026-02-25 - Phase 6.4: integration tests for McpServerHandler caching wiring
 using FluentAssertions;
 using McpServer.Audit;
+using McpServer.Auth;
 using McpServer.Caching;
 using McpServer.Configuration;
 using McpServer.Logging;
@@ -78,7 +79,9 @@ public class McpServerHandlerCacheTests
             auditLogger: NullAuditLogger.Instance,
             rateLimiter: NullRateLimiter.Instance,
             // Argha - 2026-02-25 - the cache under test
-            responseCache: cache);
+            responseCache: cache,
+            // Argha - 2026-02-25 - Phase 7: no-op auth; cache tests don't test authorization
+            authorizationService: NullAuthorizationService.Instance);
     }
 
     private static async Task InitializeAsync(McpServerHandler handler)
@@ -213,7 +216,9 @@ public class McpServerHandlerCacheTests
             logSink: new McpLogSink(),
             auditLogger: mockAudit.Object,
             rateLimiter: NullRateLimiter.Instance,
-            responseCache: cache);
+            responseCache: cache,
+            // Argha - 2026-02-25 - Phase 7: no-op auth; cache tests don't test authorization
+            authorizationService: NullAuthorizationService.Instance);
 
         await InitializeAsync(handler);
 

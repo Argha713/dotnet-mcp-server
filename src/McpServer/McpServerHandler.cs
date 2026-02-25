@@ -1,4 +1,5 @@
 using McpServer.Audit;
+using McpServer.Auth;
 using McpServer.Caching;
 using McpServer.Configuration;
 using McpServer.Logging;
@@ -35,6 +36,10 @@ public class McpServerHandler
     private readonly IRateLimiter _rateLimiter;
     // Argha - 2026-02-25 - Phase 6.4: caches successful tool results to avoid redundant execution
     private readonly IResponseCache _responseCache;
+    // Argha - 2026-02-25 - Phase 7: validates API keys and enforces per-key tool/action permissions
+    private readonly IAuthorizationService _authorizationService;
+    // Argha - 2026-02-25 - Phase 7: resolved once per session during initialize; null = anonymous
+    private ApiKeyIdentity? _sessionIdentity;
     private readonly JsonSerializerOptions _jsonOptions;
     // Argha - 2026-02-17 - initialization gate: reject tool calls before handshake completes (MCP spec)
     private bool _initialized;
@@ -51,7 +56,9 @@ public class McpServerHandler
         // Argha - 2026-02-25 - Phase 6.3: rate limiter injected; NullRateLimiter used in tests
         IRateLimiter rateLimiter,
         // Argha - 2026-02-25 - Phase 6.4: response cache injected; NullResponseCache used in tests
-        IResponseCache responseCache)
+        IResponseCache responseCache,
+        // Argha - 2026-02-25 - Phase 7: auth service injected; NullAuthorizationService used in tests
+        IAuthorizationService authorizationService)
     {
         _tools = tools;
         _resourceProviders = resourceProviders;
@@ -62,6 +69,7 @@ public class McpServerHandler
         _auditLogger = auditLogger;
         _rateLimiter = rateLimiter;
         _responseCache = responseCache;
+        _authorizationService = authorizationService;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -211,9 +219,16 @@ public class McpServerHandler
                 request.Params.Value.GetRawText(), _jsonOptions);
         }
 
-        _logger.LogInformation("Client: {ClientName} {ClientVersion}", 
+        _logger.LogInformation("Client: {ClientName} {ClientVersion}",
             initParams?.ClientInfo?.Name ?? "Unknown",
             initParams?.ClientInfo?.Version ?? "Unknown");
+
+        // Argha - 2026-02-25 - Phase 7: resolve session identity from MCP_API_KEY env var
+        var apiKey = Environment.GetEnvironmentVariable("MCP_API_KEY");
+        _sessionIdentity = _authorizationService.ResolveIdentity(apiKey);
+        // Argha - 2026-02-25 - never log the raw key value
+        _logger.LogInformation("Auth: session identity resolved to '{Name}'.",
+            _sessionIdentity?.Name ?? "anonymous");
 
         return new JsonRpcResponse
         {
@@ -323,6 +338,25 @@ public class McpServerHandler
         // Argha - 2026-02-25 - Phase 6.2: extract action for the audit record (most tools have an "action" arg)
         var action = arguments?.GetValueOrDefault("action")?.ToString();
 
+        // Argha - 2026-02-25 - Phase 7: auth check first; unauthenticated callers must not consume rate-limit tokens
+        var authResult = _authorizationService.AuthorizeToolCall(_sessionIdentity, callParams.Name, action);
+        if (!authResult.IsAuthorized)
+        {
+            sw.Stop();
+            _logger.LogWarning("Unauthorized tool call '{Tool}': {Reason}", callParams.Name, authResult.DenialReason);
+            await WriteAuditAsync(callParams.Name, action, arguments, "Unauthorized",
+                authResult.DenialReason, correlationId, sw.ElapsedMilliseconds);
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Result = new ToolCallResult
+                {
+                    Content = new List<ContentBlock> { new() { Type = "text", Text = authResult.DenialReason ?? "Unauthorized." } },
+                    IsError = true
+                }
+            };
+        }
+
         // Argha - 2026-02-25 - Phase 6.3: enforce per-tool call-rate limit before execution
         if (!_rateLimiter.TryAcquire(callParams.Name))
         {
@@ -423,6 +457,8 @@ public class McpServerHandler
                 Outcome = outcome,
                 ErrorMessage = errorMessage,
                 DurationMs = durationMs,
+                // Argha - 2026-02-25 - Phase 7: friendly name of the authenticated client; null for anonymous
+                ClientIdentity = _sessionIdentity?.Name,
             };
 
             await _auditLogger.LogCallAsync(record);

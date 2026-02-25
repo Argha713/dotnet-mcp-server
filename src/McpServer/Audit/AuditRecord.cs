@@ -32,4 +32,8 @@ public sealed record AuditRecord
 
     /// <summary>Wall-clock duration of the tool execution in milliseconds.</summary>
     public long DurationMs { get; init; }
+
+    // Argha - 2026-02-25 - Phase 7: friendly name of the authenticated client; null for anonymous/auth-disabled
+    /// <summary>Friendly name of the API key that made this call; null when auth is disabled or anonymous.</summary>
+    public string? ClientIdentity { get; init; }
 }

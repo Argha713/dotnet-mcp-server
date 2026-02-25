@@ -1,5 +1,6 @@
 using McpServer;
 using McpServer.Audit;
+using McpServer.Auth;
 using McpServer.Caching;
 using McpServer.Configuration;
 using McpServer.Logging;
@@ -146,6 +147,15 @@ if (cacheConfig.Enabled)
 else
     // Argha - 2026-02-25 - NullResponseCache has a private ctor; register via factory to reuse the singleton
     services.AddSingleton<IResponseCache>(_ => NullResponseCache.Instance);
+
+// Argha - 2026-02-25 - Phase 7: register auth service
+services.Configure<AuthSettings>(configuration.GetSection(AuthSettings.SectionName));
+var authConfig = configuration.GetSection(AuthSettings.SectionName).Get<AuthSettings>() ?? new AuthSettings();
+if (authConfig.Enabled)
+    services.AddSingleton<IAuthorizationService, ApiKeyAuthorizationService>();
+else
+    // Argha - 2026-02-25 - NullAuthorizationService has a private ctor; register via factory to reuse the singleton
+    services.AddSingleton<IAuthorizationService>(_ => NullAuthorizationService.Instance);
 
 // Argha - 2026-02-25 - Phase 6.2: register the appropriate audit logger based on configuration
 var auditConfig = configuration.GetSection(AuditSettings.SectionName).Get<AuditSettings>() ?? new AuditSettings();

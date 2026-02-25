@@ -803,8 +803,17 @@ dotnet run 2> log.txt
 - [x] Thread-safe `ConcurrentDictionary` backing store with lock-guarded eviction
 - [x] Disable entirely with `Cache:Enabled: false`
 
-#### Upcoming
-- [ ] Tool-level authentication & permissions
+### Phase 7 — Tool-level Authentication & Permissions ✅
+
+- [x] API key authentication layer — clients present `MCP_API_KEY` env var (set in Claude Desktop's `env` block)
+- [x] Per-key authorization — each key maps to an explicit `AllowedTools` list (`"*"` = all tools)
+- [x] Per-tool action allowlists — `AllowedActions` restricts individual actions within a tool
+- [x] `NullAuthorizationService` singleton — auth disabled by default (`Auth:Enabled: false`); fully backwards-compatible
+- [x] Auth check happens before rate limiting — unauthorized calls don't consume rate-limit tokens
+- [x] Unauthorized calls return `IsError=true` with a clear message — AI can read and understand it
+- [x] Audit log gains `clientIdentity` field — shows which key made each call
+- [x] Unauthorized calls audited with outcome `"Unauthorized"`
+- [x] Key is case-sensitive; tool names and action names are case-insensitive
 
 ---
 

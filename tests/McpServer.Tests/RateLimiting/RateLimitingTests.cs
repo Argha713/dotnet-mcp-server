@@ -1,6 +1,7 @@
 // Argha - 2026-02-25 - Phase 6.3: unit tests for the rate limiting subsystem
 using FluentAssertions;
 using McpServer.Audit;
+using McpServer.Auth;
 using McpServer.Caching;
 using McpServer.Configuration;
 using McpServer.Logging;
@@ -241,7 +242,9 @@ public class McpServerHandlerRateLimitTests
             // Argha - 2026-02-25 - inject the rate limiter under test
             rateLimiter: rateLimiter,
             // Argha - 2026-02-25 - Phase 6.4: no-op cache; rate limiting tests don't test caching
-            responseCache: NullResponseCache.Instance);
+            responseCache: NullResponseCache.Instance,
+            // Argha - 2026-02-25 - Phase 7: no-op auth; rate limiting tests don't test authorization
+            authorizationService: NullAuthorizationService.Instance);
     }
 
     private static async Task InitializeAsync(McpServerHandler handler)
@@ -343,7 +346,9 @@ public class McpServerHandlerRateLimitTests
             auditLogger: mockAudit.Object,
             rateLimiter: mockLimiter.Object,
             // Argha - 2026-02-25 - Phase 6.4: no-op cache; rate limiting tests don't test caching
-            responseCache: NullResponseCache.Instance);
+            responseCache: NullResponseCache.Instance,
+            // Argha - 2026-02-25 - Phase 7: no-op auth; rate limiting tests don't test authorization
+            authorizationService: NullAuthorizationService.Instance);
 
         await InitializeAsync(handler);
         await handler.ProcessMessageAsync(ToolCallMsg(5), CancellationToken.None);

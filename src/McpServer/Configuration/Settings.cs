@@ -174,6 +174,42 @@ public class CacheSettings
     public int MaxEntries { get; set; } = 1000;
 }
 
+// Argha - 2026-02-25 - Phase 7: API key authentication and per-key authorization settings
+public class AuthSettings
+{
+    public const string SectionName = "Auth";
+
+    /// <summary>Set to true to enable auth checks. Default: false (backwards-compatible).</summary>
+    public bool Enabled { get; set; } = false;
+
+    /// <summary>When true, tool calls with no valid key return IsError=true. Default: true.</summary>
+    public bool RequireAuthentication { get; set; } = true;
+
+    /// <summary>
+    /// Dictionary of API keys → permissions.
+    /// Key: the raw key string (case-sensitive).
+    /// </summary>
+    public Dictionary<string, ApiKeyConfig> ApiKeys { get; set; } = new();
+}
+
+public class ApiKeyConfig
+{
+    /// <summary>Friendly name shown in audit logs.</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Allowed tool names. Use "*" to allow all.
+    /// Empty list = deny all tools.
+    /// </summary>
+    public List<string> AllowedTools { get; set; } = new();
+
+    /// <summary>
+    /// Per-tool action allowlists. If a tool has no entry, all its actions are permitted.
+    /// Example: { "sql_query": ["query", "list_tables"] }
+    /// </summary>
+    public Dictionary<string, List<string>> AllowedActions { get; set; } = new();
+}
+
 /// <summary>
 /// General server configuration
 /// </summary>
