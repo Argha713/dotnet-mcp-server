@@ -765,8 +765,16 @@ dotnet run 2> log.txt
 - [x] Example configurations (`developer.json`, `data-analyst.json`, `api-integrator.json`)
 - [x] `CONTRIBUTING.md` + issue templates
 
-### Phase 6 — Advanced Features
-- [ ] Multi-database support (PostgreSQL, MySQL, SQLite)
+### Phase 6 — Advanced Features ✅
+
+#### Phase 6.1 — Multi-Database Support ✅
+- [x] Multi-database support: SQL Server, PostgreSQL, MySQL, SQLite
+- [x] `configure_connection` guided setup (no password through AI)
+- [x] `test_connection` with human-readable diagnostics (passwords never shown)
+- [x] Connection string sanitizer — passwords stripped from all error output
+- [x] Security & Trust documentation
+
+#### Upcoming
 - [ ] Response caching with configurable TTL
 - [ ] Audit logging (every tool call logged to file)
 - [ ] Rate limiting per tool

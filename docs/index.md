@@ -48,6 +48,19 @@ This server brings MCP to the .NET ecosystem. It works with **any MCP-compatible
 
 ---
 
+## Your Secrets Stay Safe
+
+When you connect an AI to your databases and files, you need to know that your passwords, API keys, and credentials are protected. dotnet-mcp-server is built so that **secrets never leave your machine and are never seen by the AI** — this is enforced structurally, not by policy.
+
+- Database passwords live in `appsettings.json`. The AI only sees connection *names*, never connection strings.
+- All error messages are sanitized — passwords are stripped before any response reaches the AI.
+- The SQL tool has no `password` parameter. The AI cannot ask for one.
+- Environment variables with sensitive names are masked at the source (`***`).
+
+[Full Security & Trust Guide →](security/trust.md){ .md-button .md-button--primary }
+
+---
+
 ## Security by Default
 
 Every tool ships with security constraints that are **on by default** and cannot be bypassed at runtime:
@@ -60,7 +73,7 @@ Every tool ships with security constraints that are **on by default** and cannot
 - Regex timeout protection against ReDoS attacks
 - XXE prevention in XML parsing
 
-[Full Security Reference →](configuration/security.md)
+[Security Constraints Reference →](configuration/security.md)
 
 ---
 

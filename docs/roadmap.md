@@ -53,9 +53,26 @@
 
 ---
 
-## Phase 6 — Advanced Features
+## Phase 6 — Advanced Features ✅
 
-- [ ] Multi-database support (PostgreSQL, MySQL, SQLite)
+### Phase 6.1 — Multi-Database Support ✅
+
+- [x] `IDatabaseProvider` abstraction — SQL tool is now engine-agnostic
+- [x] SQL Server provider (refactored from original hardcoded implementation)
+- [x] PostgreSQL provider (Npgsql 8.x)
+- [x] MySQL / MariaDB provider (MySqlConnector 2.x)
+- [x] SQLite provider (Microsoft.Data.Sqlite 8.x, uses `sqlite_master` + `PRAGMA table_info`)
+- [x] `configure_connection` action — guided setup without password, writes template to appsettings.json
+- [x] `test_connection` action — human-readable diagnostics, passwords never shown
+- [x] `ConnectionStringSanitizer` — passwords stripped from all error output
+- [x] Per-provider error classification (maps error codes to plain-English fix instructions)
+- [x] Security & Trust documentation — explains why secrets never reach the AI
+- [x] Per-tool "Secrets Stay Safe" callouts across all tool docs
+
+---
+
+### Upcoming
+
 - [ ] Response caching with configurable TTL
 - [ ] Audit logging (every tool call logged to file)
 - [ ] Rate limiting per tool

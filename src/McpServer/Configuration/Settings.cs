@@ -32,7 +32,13 @@ public class SqlConnectionConfig
     /// Connection string for the database
     /// </summary>
     public string ConnectionString { get; set; } = string.Empty;
-    
+
+    // Argha - 2026-02-25 - Phase 6.1: which DB engine to use; defaults to SqlServer for backwards compatibility
+    /// <summary>
+    /// Database provider: SqlServer | PostgreSQL | MySQL | SQLite (default: SqlServer)
+    /// </summary>
+    public string Provider { get; set; } = "SqlServer";
+
     /// <summary>
     /// Human-readable description
     /// </summary>

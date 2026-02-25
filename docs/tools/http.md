@@ -2,6 +2,11 @@
 
 Makes GET and POST requests to external APIs. All requests are validated against the `AllowedHosts` configuration.
 
+!!! success "Authorization headers stay safe"
+    If you include an `Authorization` header (e.g. a Bearer token or API key) in a request, it is sent directly to the target API. It is not stored, logged, or echoed back in the response. The AI does not see the value after it is used.
+
+    For tokens you use on every request, store them in your application rather than passing them through the AI each time. See the [Security & Trust Guide](../security/trust.md).
+
 !!! warning "Security constraints"
     - Only hosts in the `AllowedHosts` list are reachable (subdomains are automatically included)
     - Only `http://` and `https://` schemes are allowed

@@ -2,6 +2,11 @@
 
 Performs read-only Git operations on local repositories. All paths and arguments are validated before execution.
 
+!!! success "Your Git credentials are never exposed"
+    This tool only reads repository state. It never interacts with your Git credential store, SSH keys, or authentication tokens. The AI cannot push, commit, or modify your repository in any way — the tool is strictly read-only.
+
+    See the [Security & Trust Guide](../security/trust.md).
+
 !!! warning "Security constraint"
     Only read-only Git commands are allowed. Write operations (commit, push, reset, checkout, merge, etc.) are not exposed. Repository paths are validated and argument injection is prevented.
 

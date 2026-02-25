@@ -1,14 +1,19 @@
+// Argha - 2026-02-25 - Phase 6.1: refactored to support SqlServer, PostgreSQL, MySQL, and SQLite
+// via IDatabaseProvider abstraction. Passwords never reach the AI — see docs/security/trust.md.
+using McpServer.Data;
 using McpServer.Progress;
 using McpServer.Protocol;
 using McpServer.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.Data.SqlClient;
 using System.Text;
 
 namespace McpServer.Tools;
 
 /// <summary>
-/// Tool for executing read-only SQL queries against configured databases
+/// Tool for executing read-only SQL queries against configured databases.
+/// Supports SQL Server, PostgreSQL, MySQL, and SQLite.
+/// Database passwords are resolved from appsettings.json by the server — they are never passed
+/// through the AI and are never included in any response.
 /// </summary>
 public class SqlQueryTool : ITool
 {
@@ -21,7 +26,11 @@ public class SqlQueryTool : ITool
 
     public string Name => "sql_query";
 
-    public string Description => "Execute read-only SQL queries against configured databases. Use this to retrieve data from SQL Server databases. Only SELECT queries are allowed for safety.";
+    public string Description =>
+        "Execute read-only SQL queries against configured databases. " +
+        "Supports SQL Server, PostgreSQL, MySQL, and SQLite. " +
+        "Only SELECT queries are allowed. " +
+        "Database passwords are stored in appsettings.json and never sent through this assistant.";
 
     public JsonSchema InputSchema => new()
     {
@@ -32,12 +41,16 @@ public class SqlQueryTool : ITool
             {
                 Type = "string",
                 Description = "The action to perform",
-                Enum = new List<string> { "query", "list_databases", "list_tables", "describe_table" }
+                Enum = new List<string>
+                {
+                    "query", "list_databases", "list_tables", "describe_table",
+                    "configure_connection", "test_connection"
+                }
             },
             ["database"] = new()
             {
                 Type = "string",
-                Description = "Name of the configured database connection to use"
+                Description = "Name of the configured database connection to use. Use 'list_databases' to see available connections."
             },
             ["query"] = new()
             {
@@ -54,13 +67,53 @@ public class SqlQueryTool : ITool
                 Type = "string",
                 Description = "Maximum number of rows to return (default: 100)",
                 Default = "100"
+            },
+            // configure_connection parameters — no password field by design
+            ["provider"] = new()
+            {
+                Type = "string",
+                Description = "Database provider for configure_connection: SqlServer | PostgreSQL | MySQL | SQLite",
+                Enum = new List<string> { "SqlServer", "PostgreSQL", "MySQL", "SQLite" }
+            },
+            ["host"] = new()
+            {
+                Type = "string",
+                Description = "Server host or IP address (for configure_connection)"
+            },
+            ["port"] = new()
+            {
+                Type = "string",
+                Description = "Server port (for configure_connection). Leave empty to use provider default."
+            },
+            ["db_name"] = new()
+            {
+                Type = "string",
+                Description = "Database/schema name (for configure_connection)"
+            },
+            ["username"] = new()
+            {
+                Type = "string",
+                Description = "Database username (for configure_connection). The password is added by the user directly in appsettings.json."
+            },
+            ["connection_name"] = new()
+            {
+                Type = "string",
+                Description = "Logical name for the connection in appsettings.json (for configure_connection)"
+            },
+            ["description"] = new()
+            {
+                Type = "string",
+                Description = "Human-readable description for the connection (for configure_connection)"
             }
         },
         Required = new List<string> { "action" }
     };
 
     // Argha - 2026-02-24 - added IProgressReporter; used by ExecuteQueryAsync to emit per-row notifications
-    public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object>? arguments, IProgressReporter? progress = null, CancellationToken cancellationToken = default)
+    public async Task<ToolCallResult> ExecuteAsync(
+        Dictionary<string, object>? arguments,
+        IProgressReporter? progress = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -68,19 +121,19 @@ public class SqlQueryTool : ITool
 
             var result = action.ToLower() switch
             {
-                "query" => await ExecuteQueryAsync(arguments, progress, cancellationToken),
-                "list_databases" => ListDatabases(),
-                "list_tables" => await ListTablesAsync(arguments, cancellationToken),
-                "describe_table" => await DescribeTableAsync(arguments, cancellationToken),
-                _ => $"Unknown action: {action}. Use 'query', 'list_databases', 'list_tables', or 'describe_table'."
+                "query"                => await ExecuteQueryAsync(arguments, progress, cancellationToken),
+                "list_databases"       => ListDatabases(),
+                "list_tables"          => await ListTablesAsync(arguments, cancellationToken),
+                "describe_table"       => await DescribeTableAsync(arguments, cancellationToken),
+                "configure_connection" => ConfigureConnection(arguments),
+                "test_connection"      => await TestConnectionAsync(arguments, cancellationToken),
+                _ => $"Unknown action: {action}. " +
+                     $"Use: query, list_databases, list_tables, describe_table, configure_connection, test_connection."
             };
 
             return new ToolCallResult
             {
-                Content = new List<ContentBlock>
-                {
-                    new() { Type = "text", Text = result }
-                }
+                Content = new List<ContentBlock> { new() { Type = "text", Text = result } }
             };
         }
         catch (Exception ex)
@@ -96,24 +149,33 @@ public class SqlQueryTool : ITool
         }
     }
 
+    // ─── list_databases ────────────────────────────────────────────────────────
+
     private string ListDatabases()
     {
         if (_settings.Connections.Count == 0)
-            return "No database connections configured. Add connections to appsettings.json under Sql.Connections.";
+            return "No database connections configured. " +
+                   "Use 'configure_connection' to set one up, or add entries to appsettings.json under Sql.Connections.";
 
         var sb = new StringBuilder("Configured database connections:\n");
         foreach (var conn in _settings.Connections)
         {
-            sb.AppendLine($"  🗄️ {conn.Key}: {conn.Value.Description ?? "No description"}");
+            sb.AppendLine($"  🗄️ {conn.Key} [{conn.Value.Provider}] — {conn.Value.Description ?? "No description"}");
         }
+
         return sb.ToString();
     }
 
+    // ─── query ─────────────────────────────────────────────────────────────────
+
     // Argha - 2026-02-24 - progress added; reports every 50 rows to avoid notification flood
-    private async Task<string> ExecuteQueryAsync(Dictionary<string, object>? arguments, IProgressReporter? progress, CancellationToken cancellationToken)
+    private async Task<string> ExecuteQueryAsync(
+        Dictionary<string, object>? arguments,
+        IProgressReporter? progress,
+        CancellationToken cancellationToken)
     {
-        var dbName = GetStringArg(arguments, "database");
-        var query = GetStringArg(arguments, "query");
+        var dbName     = GetStringArg(arguments, "database");
+        var query      = GetStringArg(arguments, "query");
         var maxRowsStr = GetStringArg(arguments, "max_rows") ?? "100";
 
         if (string.IsNullOrEmpty(dbName))
@@ -134,24 +196,42 @@ public class SqlQueryTool : ITool
             maxRows = 100;
         maxRows = Math.Min(maxRows, 1000); // Cap at 1000
 
-        await using var connection = new SqlConnection(connConfig.ConnectionString);
-        await connection.OpenAsync(cancellationToken);
+        IDatabaseProvider provider;
+        try
+        {
+            provider = DatabaseProviderFactory.Resolve(connConfig.Provider);
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Configuration error: {ex.Message}";
+        }
 
-        await using var command = new SqlCommand(query, connection);
+        await using var connection = provider.CreateConnection(connConfig.ConnectionString);
+        try
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            var sanitized = ConnectionStringSanitizer.Sanitize(connConfig.ConnectionString);
+            return $"Error: {provider.ClassifyError(ex, sanitized)}";
+        }
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = query;
         command.CommandTimeout = 30;
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        var sb = new StringBuilder();
         var columns = Enumerable.Range(0, reader.FieldCount)
             .Select(i => reader.GetName(i))
             .ToList();
 
+        var sb = new StringBuilder();
         // Header
         sb.AppendLine(string.Join(" | ", columns));
         sb.AppendLine(new string('-', columns.Sum(c => c.Length) + (columns.Count - 1) * 3));
 
-        // Data rows
         // Argha - 2026-02-24 - emit progress(0) at start so client knows work has begun
         progress?.Report(0, maxRows);
         var rowCount = 0;
@@ -173,12 +253,18 @@ public class SqlQueryTool : ITool
         progress?.Report(rowCount, maxRows);
 
         var moreRows = await reader.ReadAsync(cancellationToken);
-        var footer = moreRows ? $"\n... (showing {maxRows} of more rows)" : $"\n({rowCount} row(s))";
+        var footer = moreRows
+            ? $"\n... (showing {maxRows} of more rows)"
+            : $"\n({rowCount} row(s))";
 
         return sb.ToString() + footer;
     }
 
-    private async Task<string> ListTablesAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken)
+    // ─── list_tables ───────────────────────────────────────────────────────────
+
+    private async Task<string> ListTablesAsync(
+        Dictionary<string, object>? arguments,
+        CancellationToken cancellationToken)
     {
         var dbName = GetStringArg(arguments, "database");
 
@@ -188,33 +274,37 @@ public class SqlQueryTool : ITool
         if (!_settings.Connections.TryGetValue(dbName, out var connConfig))
             return $"Error: Database '{dbName}' not found.";
 
-        await using var connection = new SqlConnection(connConfig.ConnectionString);
-        await connection.OpenAsync(cancellationToken);
-
-        var query = @"
-            SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE 
-            FROM INFORMATION_SCHEMA.TABLES 
-            ORDER BY TABLE_SCHEMA, TABLE_NAME";
-
-        await using var command = new SqlCommand(query, connection);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        var sb = new StringBuilder($"Tables in '{dbName}':\n");
-        while (await reader.ReadAsync(cancellationToken))
+        IDatabaseProvider provider;
+        try
         {
-            var schema = reader.GetString(0);
-            var table = reader.GetString(1);
-            var type = reader.GetString(2);
-            var icon = type == "BASE TABLE" ? "📋" : "👁️";
-            sb.AppendLine($"  {icon} {schema}.{table}");
+            provider = DatabaseProviderFactory.Resolve(connConfig.Provider);
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Configuration error: {ex.Message}";
         }
 
-        return sb.ToString();
+        await using var connection = provider.CreateConnection(connConfig.ConnectionString);
+        try
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            var sanitized = ConnectionStringSanitizer.Sanitize(connConfig.ConnectionString);
+            return $"Error: {provider.ClassifyError(ex, sanitized)}";
+        }
+
+        return await provider.ListTablesAsync(connection, dbName, cancellationToken);
     }
 
-    private async Task<string> DescribeTableAsync(Dictionary<string, object>? arguments, CancellationToken cancellationToken)
+    // ─── describe_table ────────────────────────────────────────────────────────
+
+    private async Task<string> DescribeTableAsync(
+        Dictionary<string, object>? arguments,
+        CancellationToken cancellationToken)
     {
-        var dbName = GetStringArg(arguments, "database");
+        var dbName    = GetStringArg(arguments, "database");
         var tableName = GetStringArg(arguments, "table");
 
         if (string.IsNullOrEmpty(dbName))
@@ -226,53 +316,146 @@ public class SqlQueryTool : ITool
         if (!_settings.Connections.TryGetValue(dbName, out var connConfig))
             return $"Error: Database '{dbName}' not found.";
 
-        await using var connection = new SqlConnection(connConfig.ConnectionString);
-        await connection.OpenAsync(cancellationToken);
-
-        // Split schema.table if provided
-        var parts = tableName.Split('.');
-        var schema = parts.Length > 1 ? parts[0] : "dbo";
-        var table = parts.Length > 1 ? parts[1] : parts[0];
-
-        var query = @"
-            SELECT 
-                c.COLUMN_NAME,
-                c.DATA_TYPE,
-                c.IS_NULLABLE,
-                c.CHARACTER_MAXIMUM_LENGTH,
-                c.COLUMN_DEFAULT
-            FROM INFORMATION_SCHEMA.COLUMNS c
-            WHERE c.TABLE_SCHEMA = @Schema AND c.TABLE_NAME = @Table
-            ORDER BY c.ORDINAL_POSITION";
-
-        await using var command = new SqlCommand(query, connection);
-        command.Parameters.AddWithValue("@Schema", schema);
-        command.Parameters.AddWithValue("@Table", table);
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        var sb = new StringBuilder($"Table: {schema}.{table}\n\n");
-        sb.AppendLine("Column | Type | Nullable | Default");
-        sb.AppendLine("-------|------|----------|--------");
-
-        var hasRows = false;
-        while (await reader.ReadAsync(cancellationToken))
+        IDatabaseProvider provider;
+        try
         {
-            hasRows = true;
-            var colName = reader.GetString(0);
-            var dataType = reader.GetString(1);
-            var nullable = reader.GetString(2);
-            var maxLen = reader.IsDBNull(3) ? "" : $"({reader.GetValue(3)})";
-            var defaultVal = reader.IsDBNull(4) ? "" : reader.GetString(4);
-
-            sb.AppendLine($"{colName} | {dataType}{maxLen} | {nullable} | {defaultVal}");
+            provider = DatabaseProviderFactory.Resolve(connConfig.Provider);
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Configuration error: {ex.Message}";
         }
 
-        if (!hasRows)
-            return $"Table '{schema}.{table}' not found.";
+        await using var connection = provider.CreateConnection(connConfig.ConnectionString);
+        try
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            var sanitized = ConnectionStringSanitizer.Sanitize(connConfig.ConnectionString);
+            return $"Error: {provider.ClassifyError(ex, sanitized)}";
+        }
+
+        return await provider.DescribeTableAsync(connection, tableName, cancellationToken);
+    }
+
+    // ─── configure_connection ──────────────────────────────────────────────────
+
+    // Argha - 2026-02-25 - no password parameter by design — user adds it to appsettings.json directly
+    private string ConfigureConnection(Dictionary<string, object>? arguments)
+    {
+        var providerName   = GetStringArg(arguments, "provider");
+        var host           = GetStringArg(arguments, "host");
+        var port           = GetStringArg(arguments, "port");
+        var dbName         = GetStringArg(arguments, "db_name");
+        var username       = GetStringArg(arguments, "username");
+        var connectionName = GetStringArg(arguments, "connection_name");
+        var description    = GetStringArg(arguments, "description");
+
+        if (string.IsNullOrEmpty(providerName))
+            return $"Error: 'provider' is required. Supported: {string.Join(", ", DatabaseProviderFactory.SupportedProviders)}";
+
+        if (string.IsNullOrEmpty(host))
+            return "Error: 'host' is required. For SQLite, use the file path as the host.";
+
+        if (string.IsNullOrEmpty(dbName))
+            return "Error: 'db_name' is required.";
+
+        if (string.IsNullOrEmpty(username) && providerName != "SQLite")
+            return "Error: 'username' is required for this database provider.";
+
+        if (string.IsNullOrEmpty(connectionName))
+            return "Error: 'connection_name' is required. This is the name you'll use to reference this connection (e.g. 'production', 'analytics').";
+
+        IDatabaseProvider provider;
+        try
+        {
+            provider = DatabaseProviderFactory.Resolve(providerName);
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Error: {ex.Message}";
+        }
+
+        var partialCs = provider.BuildPartialConnectionString(host, port, dbName, username ?? "");
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"Connection template generated for '{connectionName}'.");
+        sb.AppendLine();
+        sb.AppendLine("Add the following entry to your Sql.Connections section in appsettings.json:");
+        sb.AppendLine();
+        sb.AppendLine("```json");
+        sb.AppendLine($"\"{connectionName}\": {{");
+        sb.AppendLine($"  \"Provider\": \"{provider.ProviderName}\",");
+        sb.AppendLine($"  \"ConnectionString\": \"{partialCs}\",");
+        sb.AppendLine($"  \"Description\": \"{description ?? ""}\"");
+        sb.AppendLine("}");
+        sb.AppendLine("```");
+        sb.AppendLine();
+
+        if (providerName != "SQLite")
+        {
+            sb.AppendLine("IMPORTANT: The connection string above contains a placeholder password.");
+            sb.AppendLine("Open appsettings.json and replace YOUR_PASSWORD_HERE with the real password.");
+            sb.AppendLine("Never share your password through this assistant.");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine($"After saving the file, run 'test_connection' with database='{connectionName}' to verify.");
 
         return sb.ToString();
     }
+
+    // ─── test_connection ───────────────────────────────────────────────────────
+
+    // Argha - 2026-02-25 - sanitizes all error output; passwords are never shown
+    private async Task<string> TestConnectionAsync(
+        Dictionary<string, object>? arguments,
+        CancellationToken cancellationToken)
+    {
+        var dbName = GetStringArg(arguments, "database");
+
+        if (string.IsNullOrEmpty(dbName))
+            return "Error: 'database' parameter is required.";
+
+        if (!_settings.Connections.TryGetValue(dbName, out var connConfig))
+            return $"Error: Connection '{dbName}' not found. Use 'list_databases' to see configured connections.";
+
+        IDatabaseProvider provider;
+        try
+        {
+            provider = DatabaseProviderFactory.Resolve(connConfig.Provider);
+        }
+        catch (ArgumentException ex)
+        {
+            return $"Configuration error: {ex.Message}";
+        }
+
+        var sanitized = ConnectionStringSanitizer.Sanitize(connConfig.ConnectionString);
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"Testing: {dbName} ({provider.ProviderName})");
+        sb.AppendLine($"  Connection: {sanitized}");  // password already stripped by Sanitize
+        sb.AppendLine();
+
+        await using var connection = provider.CreateConnection(connConfig.ConnectionString);
+        try
+        {
+            await connection.OpenAsync(cancellationToken);
+            sb.AppendLine("Result: CONNECTED");
+            sb.AppendLine($"  Server version: {connection.ServerVersion}");
+        }
+        catch (Exception ex)
+        {
+            sb.AppendLine("Result: FAILED");
+            sb.AppendLine($"  {provider.ClassifyError(ex, sanitized)}");
+        }
+
+        return sb.ToString();
+    }
+
+    // ─── validation ────────────────────────────────────────────────────────────
 
     // Argha - 2026-02-17 - extracted SQL validation into a dedicated method for testability
     internal static string? ValidateQuery(string query)
@@ -292,12 +475,19 @@ public class SqlQueryTool : ITool
             return "Error: SQL comments (-- or /* */) are not allowed in queries.";
 
         // Check for dangerous keywords
-        var dangerousKeywords = new[] { "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "TRUNCATE", "EXEC", "EXECUTE", "GRANT", "REVOKE", "MERGE", "OPENROWSET", "OPENDATASOURCE", "BULK", "XP_", "SP_" };
+        var dangerousKeywords = new[]
+        {
+            "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "TRUNCATE",
+            "EXEC", "EXECUTE", "GRANT", "REVOKE", "MERGE", "OPENROWSET",
+            "OPENDATASOURCE", "BULK", "XP_", "SP_"
+        };
         if (dangerousKeywords.Any(k => trimmedQuery.Contains(k, StringComparison.OrdinalIgnoreCase)))
             return "Error: Query contains forbidden keywords. Only read-only SELECT queries are allowed.";
 
         return null; // validation passed
     }
+
+    // ─── helpers ───────────────────────────────────────────────────────────────
 
     private static string? GetStringArg(Dictionary<string, object>? args, string key)
     {

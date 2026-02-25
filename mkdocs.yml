@@ -53,9 +53,11 @@ nav:
     - Environment: tools/environment.md
     - System Info: tools/system-info.md
     - Git: tools/git.md
+  - Security:
+    - Why You Can Trust This Tool: security/trust.md
+    - Security Constraints: configuration/security.md
   - Configuration:
     - Profiles: configuration/profiles.md
-    - Security Constraints: configuration/security.md
   - Plugins:
     - Overview: plugins/index.md
     - Quickstart: plugins/quickstart.md

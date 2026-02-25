@@ -2,6 +2,11 @@
 
 Reads files and lists directory contents. All paths are validated against the `AllowedPaths` configuration before any operation is performed.
 
+!!! success "Your files stay private"
+    The AI can only access directories you explicitly list in `AllowedPaths`. It cannot browse your full filesystem, read files outside those directories, or access sensitive locations like SSH key folders, password manager databases, or `.env` files unless you intentionally allow those paths. Never add your home directory or credential directories to `AllowedPaths`.
+
+    See the [Security & Trust Guide](../security/trust.md) for details.
+
 !!! warning "Security constraint"
     Only paths that are a subdirectory of (or equal to) a configured `AllowedPaths` entry are accessible. Path traversal attempts (e.g. `../etc/passwd`) are blocked. Files larger than 1 MB cannot be read.
 

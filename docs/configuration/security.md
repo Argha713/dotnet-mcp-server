@@ -2,6 +2,9 @@
 
 dotnet-mcp-server is designed with a **defense-in-depth** approach. Every tool has security constraints enforced at the server level. These are **intentional design decisions** — they exist to make the server safe to run with AI clients that could be manipulated by prompt injection.
 
+!!! tip "Looking for the trust & privacy guide?"
+    If you want to understand why your passwords and secrets never reach the AI, see the [Security & Trust Guide](../security/trust.md).
+
 !!! danger "Do not weaken these constraints"
     If you believe a constraint needs changing, open an issue to discuss before submitting a PR. The security model is intentional.
 
