@@ -478,7 +478,9 @@ public class McpServerHandlerAuditTests
             logger: NullLogger<McpServerHandler>.Instance,
             logSink: new McpLogSink(),
             // Argha - 2026-02-25 - inject mock or spy so we can assert calls
-            auditLogger: auditLogger);
+            auditLogger: auditLogger,
+            // Argha - 2026-02-25 - Phase 6.3: no-op rate limiter; audit tests don't test rate limiting
+            rateLimiter: McpServer.RateLimiting.NullRateLimiter.Instance);
     }
 
     private static async Task InitializeAsync(McpServerHandler handler)

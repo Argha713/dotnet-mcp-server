@@ -4,6 +4,7 @@ using McpServer.Configuration;
 using McpServer.Logging;
 using McpServer.Plugins;
 using McpServer.Prompts;
+using McpServer.RateLimiting;
 using McpServer.Resources;
 using McpServer.Tools;
 using Microsoft.Extensions.Configuration;
@@ -126,6 +127,15 @@ if (pluginsConfig.Enabled)
     foreach (var tool in pluginLoader.LoadPlugins())
         services.AddSingleton<ITool>(tool);   // register as instance, not type
 }
+
+// Argha - 2026-02-25 - Phase 6.3: register rate limit settings and the appropriate limiter
+services.Configure<RateLimitSettings>(configuration.GetSection(RateLimitSettings.SectionName));
+var rateLimitConfig = configuration.GetSection(RateLimitSettings.SectionName).Get<RateLimitSettings>() ?? new RateLimitSettings();
+if (rateLimitConfig.Enabled)
+    services.AddSingleton<IRateLimiter, SlidingWindowRateLimiter>();
+else
+    // Argha - 2026-02-25 - NullRateLimiter has a private ctor; register via factory
+    services.AddSingleton<IRateLimiter>(_ => NullRateLimiter.Instance);
 
 // Argha - 2026-02-25 - Phase 6.2: register the appropriate audit logger based on configuration
 var auditConfig = configuration.GetSection(AuditSettings.SectionName).Get<AuditSettings>() ?? new AuditSettings();

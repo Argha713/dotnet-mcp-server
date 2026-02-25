@@ -92,6 +92,30 @@ public class PluginsSettings
     public string Directory { get; set; } = "plugins";
 }
 
+// Argha - 2026-02-25 - Phase 6.3: per-tool sliding window rate limit settings
+public class RateLimitSettings
+{
+    public const string SectionName = "RateLimit";
+
+    /// <summary>
+    /// Set to false to disable all rate limiting. Default: true.
+    /// </summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// Maximum calls per minute for any tool not listed in <see cref="ToolLimits"/>.
+    /// Set to 0 for unlimited. Default: 60.
+    /// </summary>
+    public int DefaultLimitPerMinute { get; set; } = 60;
+
+    /// <summary>
+    /// Per-tool call limits (calls per minute). Overrides <see cref="DefaultLimitPerMinute"/>.
+    /// Set a tool's value to 0 to make it unlimited regardless of the default.
+    /// Example: { "sql_query": 20, "http_request": 30, "datetime": 0 }
+    /// </summary>
+    public Dictionary<string, int> ToolLimits { get; set; } = new();
+}
+
 // Argha - 2026-02-25 - Phase 6.2: audit log settings
 public class AuditSettings
 {

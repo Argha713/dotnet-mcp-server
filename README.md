@@ -783,9 +783,17 @@ dotnet run 2> log.txt
 - [x] Audit failures are non-fatal — tool response always returned even if disk write fails
 - [x] Disable entirely with `Audit:Enabled: false`
 
+#### Phase 6.3 — Rate Limiting ✅
+- [x] Per-tool sliding window rate limiter (1-minute window)
+- [x] `RateLimit:DefaultLimitPerMinute` (default: 60) applies to any tool without an explicit override
+- [x] `RateLimit:ToolLimits` — per-tool overrides (e.g. `"sql_query": 20`, `"datetime": 0` for unlimited)
+- [x] Rate-limited calls return a clear `IsError` response with the tool name — AI can read and understand it
+- [x] Rate-limited calls are recorded in the audit log with outcome `"RateLimited"`
+- [x] Thread-safe per-tool buckets (`lock` per bucket, `ConcurrentDictionary` across tools)
+- [x] Disable entirely with `RateLimit:Enabled: false`
+
 #### Upcoming
 - [ ] Response caching with configurable TTL
-- [ ] Rate limiting per tool
 - [ ] Tool-level authentication & permissions
 
 ---

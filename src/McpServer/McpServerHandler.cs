@@ -4,6 +4,7 @@ using McpServer.Logging;
 using McpServer.Progress;
 using McpServer.Prompts;
 using McpServer.Protocol;
+using McpServer.RateLimiting;
 using McpServer.Resources;
 using McpServer.Tools;
 using Microsoft.Extensions.Logging;
@@ -29,6 +30,8 @@ public class McpServerHandler
     private readonly McpLogSink _logSink;
     // Argha - 2026-02-25 - Phase 6.2: persists an audit record for every tool call
     private readonly IAuditLogger _auditLogger;
+    // Argha - 2026-02-25 - Phase 6.3: enforces per-tool call-rate limits
+    private readonly IRateLimiter _rateLimiter;
     private readonly JsonSerializerOptions _jsonOptions;
     // Argha - 2026-02-17 - initialization gate: reject tool calls before handshake completes (MCP spec)
     private bool _initialized;
@@ -41,7 +44,9 @@ public class McpServerHandler
         ILogger<McpServerHandler> logger,
         McpLogSink logSink,
         // Argha - 2026-02-25 - Phase 6.2: audit logger injected; NullAuditLogger used in tests
-        IAuditLogger auditLogger)
+        IAuditLogger auditLogger,
+        // Argha - 2026-02-25 - Phase 6.3: rate limiter injected; NullRateLimiter used in tests
+        IRateLimiter rateLimiter)
     {
         _tools = tools;
         _resourceProviders = resourceProviders;
@@ -50,6 +55,7 @@ public class McpServerHandler
         _logger = logger;
         _logSink = logSink;
         _auditLogger = auditLogger;
+        _rateLimiter = rateLimiter;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -310,6 +316,27 @@ public class McpServerHandler
         var sw = Stopwatch.StartNew();
         // Argha - 2026-02-25 - Phase 6.2: extract action for the audit record (most tools have an "action" arg)
         var action = arguments?.GetValueOrDefault("action")?.ToString();
+
+        // Argha - 2026-02-25 - Phase 6.3: enforce per-tool call-rate limit before execution
+        if (!_rateLimiter.TryAcquire(callParams.Name))
+        {
+            sw.Stop();
+            _logger.LogWarning("Rate limit exceeded for tool '{Tool}'", callParams.Name);
+            await WriteAuditAsync(callParams.Name, action, arguments, "RateLimited", "Rate limit exceeded", correlationId, sw.ElapsedMilliseconds);
+
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Result = new ToolCallResult
+                {
+                    Content = new List<ContentBlock>
+                    {
+                        new() { Type = "text", Text = $"Rate limit exceeded for tool '{callParams.Name}'. Please wait a moment and try again." }
+                    },
+                    IsError = true
+                }
+            };
+        }
 
         try
         {
