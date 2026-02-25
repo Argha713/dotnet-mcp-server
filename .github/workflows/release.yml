@@ -121,7 +121,6 @@ jobs:
           dotnet nuget push ./nupkg/*.nupkg
           --api-key ${{ secrets.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
-          --skip-duplicate
 
   # Argha - 2026-02-24 - publish the dotnet new template package so plugin authors can run
   # "dotnet new install McpServer.Net.Templates" and scaffold plugins in one command.
@@ -159,4 +158,3 @@ jobs:
           dotnet nuget push ./nupkg-templates/*.nupkg
           --api-key ${{ secrets.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
-          --skip-duplicate
