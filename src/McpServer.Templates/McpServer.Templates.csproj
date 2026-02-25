@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <!-- Argha - 2026-02-24 - PackageType=Template registers this package with the dotnet new engine -->
     <PackageType>Template</PackageType>
-    <PackageId>McpServer.Net.Templates</PackageId>
+    <PackageId>DotnetMcpServer.Templates</PackageId>
     <Version>1.0.0</Version>
     <Description>dotnet new templates for dotnet-mcp-server plugins. Provides the mcp-tool template for scaffolding custom MCP tool plugins.</Description>
     <Authors>Argha Sarkar</Authors>

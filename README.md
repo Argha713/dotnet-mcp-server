@@ -63,7 +63,7 @@ This server provides nine enterprise-ready tools:
 ### Option A — Install as a Global Tool (Recommended)
 
 ```bash
-dotnet tool install -g McpServer.Net
+dotnet tool install -g DotnetMcpServer
 ```
 
 Then run the interactive setup wizard to create your config:
@@ -85,7 +85,7 @@ dotnet-mcp-server --validate
 To update to the latest version later:
 
 ```bash
-dotnet tool update -g McpServer.Net
+dotnet tool update -g DotnetMcpServer
 ```
 
 ---
@@ -636,7 +636,7 @@ You can extend the server with your own tools — no need to fork or modify the 
 **Step 1:** Install the template package (once):
 
 ```bash
-dotnet new install McpServer.Net.Templates
+dotnet new install DotnetMcpServer.Templates
 ```
 
 **Step 2:** Scaffold a new plugin project:
