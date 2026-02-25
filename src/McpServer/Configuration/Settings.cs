@@ -92,6 +92,35 @@ public class PluginsSettings
     public string Directory { get; set; } = "plugins";
 }
 
+// Argha - 2026-02-25 - Phase 6.2: audit log settings
+public class AuditSettings
+{
+    public const string SectionName = "Audit";
+
+    /// <summary>
+    /// Set to false to disable all audit logging. Default: true.
+    /// </summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// Directory where audit-yyyy-MM-dd.jsonl files are written.
+    /// An empty value is resolved at startup to {configDir}/audit/.
+    /// </summary>
+    public string LogDirectory { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Number of days to retain audit files. Files older than this are deleted on startup.
+    /// Set to 0 to disable retention cleanup. Default: 30.
+    /// </summary>
+    public int RetentionDays { get; set; } = 30;
+
+    /// <summary>
+    /// When true, argument values whose keys look like credentials (password, token, etc.)
+    /// are replaced with "[REDACTED]" before writing to disk. Default: true.
+    /// </summary>
+    public bool SanitizeArguments { get; set; } = true;
+}
+
 /// <summary>
 /// General server configuration
 /// </summary>

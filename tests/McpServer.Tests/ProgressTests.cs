@@ -209,7 +209,9 @@ public class McpServerHandlerProgressTests
             promptProviders: Array.Empty<McpServer.Prompts.IPromptProvider>(),
             serverSettings: serverSettings,
             logger: NullLogger<McpServerHandler>.Instance,
-            logSink: sink);
+            logSink: sink,
+            // Argha - 2026-02-25 - Phase 6.2: no-op audit logger for unit tests
+            auditLogger: McpServer.Audit.NullAuditLogger.Instance);
     }
 
     private static async Task InitializeHandlerAsync(McpServerHandler handler)

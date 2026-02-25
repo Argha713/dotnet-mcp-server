@@ -774,9 +774,17 @@ dotnet run 2> log.txt
 - [x] Connection string sanitizer — passwords stripped from all error output
 - [x] Security & Trust documentation
 
+#### Phase 6.2 — Audit Logging ✅
+- [x] Every tool call recorded to rolling daily JSONL files (`audit-yyyy-MM-dd.jsonl`)
+- [x] Captures: timestamp, correlation ID, tool name, action, sanitized arguments, outcome, error message, duration (ms)
+- [x] Sensitive argument values (password, token, api_key, etc.) replaced with `[REDACTED]` before writing to disk
+- [x] Configurable retention — files older than `Audit:RetentionDays` (default: 30) deleted on startup
+- [x] Log directory defaults to `{configDir}/audit/`, fully configurable via `Audit:LogDirectory`
+- [x] Audit failures are non-fatal — tool response always returned even if disk write fails
+- [x] Disable entirely with `Audit:Enabled: false`
+
 #### Upcoming
 - [ ] Response caching with configurable TTL
-- [ ] Audit logging (every tool call logged to file)
 - [ ] Rate limiting per tool
 - [ ] Tool-level authentication & permissions
 

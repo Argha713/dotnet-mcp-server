@@ -1,4 +1,5 @@
 using McpServer;
+using McpServer.Audit;
 using McpServer.Configuration;
 using McpServer.Logging;
 using McpServer.Plugins;
@@ -59,6 +60,15 @@ services.Configure<SqlSettings>(configuration.GetSection(SqlSettings.SectionName
 services.Configure<HttpSettings>(configuration.GetSection(HttpSettings.SectionName));
 services.Configure<EnvironmentSettings>(configuration.GetSection(EnvironmentSettings.SectionName));
 
+// Argha - 2026-02-25 - Phase 6.2: audit settings with runtime resolution of the log directory
+services.Configure<AuditSettings>(configuration.GetSection(AuditSettings.SectionName));
+services.PostConfigure<AuditSettings>(opts =>
+{
+    // Argha - 2026-02-25 - resolve empty LogDirectory to {configDir}/audit/ at startup
+    if (string.IsNullOrWhiteSpace(opts.LogDirectory))
+        opts.LogDirectory = Path.Combine(ResolveConfigDirectory(), "audit");
+});
+
 // Argha - 2026-02-24 - register McpLogSink before logging so McpLoggerProvider can receive it
 services.AddSingleton<McpLogSink>();
 
@@ -116,6 +126,14 @@ if (pluginsConfig.Enabled)
     foreach (var tool in pluginLoader.LoadPlugins())
         services.AddSingleton<ITool>(tool);   // register as instance, not type
 }
+
+// Argha - 2026-02-25 - Phase 6.2: register the appropriate audit logger based on configuration
+var auditConfig = configuration.GetSection(AuditSettings.SectionName).Get<AuditSettings>() ?? new AuditSettings();
+if (auditConfig.Enabled)
+    services.AddSingleton<IAuditLogger, FileAuditLogger>();
+else
+    // Argha - 2026-02-25 - NullAuditLogger has a private ctor; register via factory to reuse the singleton
+    services.AddSingleton<IAuditLogger>(_ => NullAuditLogger.Instance);
 
 // Argha - 2026-02-24 - register resource providers
 services.AddSingleton<IResourceProvider, FileSystemResourceProvider>();

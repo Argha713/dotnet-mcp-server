@@ -194,7 +194,9 @@ public class LoggingHandlerTests
             promptProviders: Array.Empty<McpServer.Prompts.IPromptProvider>(),
             serverSettings: serverSettings,
             logger: NullLogger<McpServerHandler>.Instance,
-            logSink: new McpLogSink());
+            logSink: new McpLogSink(),
+            // Argha - 2026-02-25 - Phase 6.2: no-op audit logger for unit tests
+            auditLogger: McpServer.Audit.NullAuditLogger.Instance);
     }
 
     private static string MakeRequest(string method, int id = 1, string? paramsJson = null)

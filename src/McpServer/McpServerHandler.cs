@@ -1,3 +1,4 @@
+using McpServer.Audit;
 using McpServer.Configuration;
 using McpServer.Logging;
 using McpServer.Progress;
@@ -7,6 +8,7 @@ using McpServer.Resources;
 using McpServer.Tools;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace McpServer;
@@ -25,6 +27,8 @@ public class McpServerHandler
     private readonly ILogger<McpServerHandler> _logger;
     // Argha - 2026-02-24 - sink receives the stdout writer at RunAsync startup and forwards logs to client
     private readonly McpLogSink _logSink;
+    // Argha - 2026-02-25 - Phase 6.2: persists an audit record for every tool call
+    private readonly IAuditLogger _auditLogger;
     private readonly JsonSerializerOptions _jsonOptions;
     // Argha - 2026-02-17 - initialization gate: reject tool calls before handshake completes (MCP spec)
     private bool _initialized;
@@ -35,7 +39,9 @@ public class McpServerHandler
         IEnumerable<IPromptProvider> promptProviders,
         IOptions<ServerSettings> serverSettings,
         ILogger<McpServerHandler> logger,
-        McpLogSink logSink)
+        McpLogSink logSink,
+        // Argha - 2026-02-25 - Phase 6.2: audit logger injected; NullAuditLogger used in tests
+        IAuditLogger auditLogger)
     {
         _tools = tools;
         _resourceProviders = resourceProviders;
@@ -43,6 +49,7 @@ public class McpServerHandler
         _serverSettings = serverSettings.Value;
         _logger = logger;
         _logSink = logSink;
+        _auditLogger = auditLogger;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -297,10 +304,21 @@ public class McpServerHandler
             ? new ProgressReporter(progressToken, _logSink)
             : NullProgressReporter.Instance;
 
+        // Argha - 2026-02-25 - Phase 6.2: unique ID ties this audit entry to one tools/call request
+        var correlationId = Guid.NewGuid().ToString("N");
+        // Argha - 2026-02-25 - Phase 6.2: capture wall-clock duration for the audit record
+        var sw = Stopwatch.StartNew();
+        // Argha - 2026-02-25 - Phase 6.2: extract action for the audit record (most tools have an "action" arg)
+        var action = arguments?.GetValueOrDefault("action")?.ToString();
+
         try
         {
             var result = await tool.ExecuteAsync(arguments, progressReporter, cancellationToken);
-            
+            sw.Stop();
+
+            // Argha - 2026-02-25 - Phase 6.2: record successful invocation
+            await WriteAuditAsync(callParams.Name, action, arguments, "Success", null, correlationId, sw.ElapsedMilliseconds);
+
             return new JsonRpcResponse
             {
                 Id = request.Id,
@@ -309,8 +327,12 @@ public class McpServerHandler
         }
         catch (Exception ex)
         {
+            sw.Stop();
             _logger.LogError(ex, "Tool execution failed: {ToolName}", callParams.Name);
-            
+
+            // Argha - 2026-02-25 - Phase 6.2: record failure with error details
+            await WriteAuditAsync(callParams.Name, action, arguments, "Failure", ex.Message, correlationId, sw.ElapsedMilliseconds);
+
             return new JsonRpcResponse
             {
                 Id = request.Id,
@@ -323,6 +345,40 @@ public class McpServerHandler
                     IsError = true
                 }
             };
+        }
+    }
+
+    // Argha - 2026-02-25 - Phase 6.2: builds and writes an AuditRecord; never propagates exceptions
+    private async Task WriteAuditAsync(
+        string toolName,
+        string? action,
+        Dictionary<string, object>? arguments,
+        string outcome,
+        string? errorMessage,
+        string correlationId,
+        long durationMs)
+    {
+        try
+        {
+            var record = new AuditRecord
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                CorrelationId = correlationId,
+                ToolName = toolName,
+                Action = action,
+                // Argha - 2026-02-25 - raw arguments; FileAuditLogger applies sanitization before writing
+                Arguments = arguments,
+                Outcome = outcome,
+                ErrorMessage = errorMessage,
+                DurationMs = durationMs,
+            };
+
+            await _auditLogger.LogCallAsync(record);
+        }
+        catch (Exception ex)
+        {
+            // Argha - 2026-02-25 - audit failure is non-fatal: log to stderr but do not surface to caller
+            _logger.LogWarning(ex, "Audit log write failed for tool '{Tool}'; call completed normally.", toolName);
         }
     }
 

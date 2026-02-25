@@ -251,7 +251,9 @@ public class ResourceHandlerTests : IDisposable
             serverSettings: serverSettings,
             logger: NullLogger<McpServerHandler>.Instance,
             // Argha - 2026-02-24 - no-op sink; writer never initialised in unit tests
-            logSink: new McpServer.Logging.McpLogSink());
+            logSink: new McpServer.Logging.McpLogSink(),
+            // Argha - 2026-02-25 - Phase 6.2: no-op audit logger for unit tests
+            auditLogger: McpServer.Audit.NullAuditLogger.Instance);
     }
 
     public void Dispose()
