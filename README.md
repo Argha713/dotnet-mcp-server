@@ -761,7 +761,7 @@ dotnet run 2> log.txt
 - [x] `dotnet new mcp-tool` project template for custom tools
 - [ ] Documentation site (Getting Started, Tool Reference, Custom Tools guide)
 - [x] Example configurations (`developer.json`, `data-analyst.json`, `api-integrator.json`)
-- [ ] `CONTRIBUTING.md` + issue templates
+- [x] `CONTRIBUTING.md` + issue templates
 
 ### Phase 6 — Advanced Features
 - [ ] Multi-database support (PostgreSQL, MySQL, SQLite)
@@ -769,6 +769,12 @@ dotnet run 2> log.txt
 - [ ] Audit logging (every tool call logged to file)
 - [ ] Rate limiting per tool
 - [ ] Tool-level authentication & permissions
+
+---
+
+## Contributing
+
+Bug reports, feature requests, and pull requests are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting.
 
 ---
 

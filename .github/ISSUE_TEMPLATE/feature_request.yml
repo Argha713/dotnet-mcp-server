@@ -1,0 +1,60 @@
+name: Feature Request
+description: Suggest a new tool, action, or improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea? Describe it below. The more context you give, the easier it is to evaluate.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the project does this relate to?
+      options:
+        - New tool
+        - New action on an existing tool
+        - MCP protocol feature
+        - Configuration / settings
+        - Plugin system
+        - CI/CD / release
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What are you trying to do that you can't do today?
+      placeholder: "I want to be able to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like this to work? Include example tool calls or config if helpful.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds you've tried, or other approaches that could solve the problem.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: security
+    attributes:
+      label: Security considerations
+      description: Check any that apply to your request.
+      options:
+        - label: This feature could expose sensitive data and needs an allowlist/blocklist
+        - label: This feature involves executing arbitrary code or commands
+        - label: I have read the security constraints in CONTRIBUTING.md

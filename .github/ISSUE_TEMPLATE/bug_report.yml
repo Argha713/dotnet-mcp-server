@@ -1,0 +1,97 @@
+name: Bug Report
+description: Something is broken or not working as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as you can.
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation method
+      options:
+        - Global tool (dotnet tool install -g DotnetMcpServer)
+        - Clone & build
+        - Docker
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Server version
+      description: Run `dotnet-mcp-server --version` or check the release tag.
+      placeholder: "e.g. 1.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: dotnet
+    attributes:
+      label: .NET version
+      description: Run `dotnet --version`
+      placeholder: "e.g. 8.0.404"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "e.g. Windows 11, Ubuntu 22.04, macOS 14"
+    validations:
+      required: true
+
+  - type: input
+    id: client
+    attributes:
+      label: MCP client
+      placeholder: "e.g. Claude Desktop, VS Code Copilot, Cursor"
+    validations:
+      required: false
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Configure ...
+        2. Send this request ...
+        3. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the full error message or unexpected output.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (stderr)
+      description: Capture with `dotnet run --project src/McpServer 2> debug.log` and paste relevant lines.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant config (appsettings.json)
+      description: Remove any passwords or secrets before pasting.
+      render: json
+    validations:
+      required: false
