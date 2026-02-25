@@ -1,6 +1,7 @@
 // Argha - 2026-02-25 - Phase 6.2: unit tests for the audit logging subsystem
 using FluentAssertions;
 using McpServer.Audit;
+using McpServer.Caching;
 using McpServer.Configuration;
 using McpServer.Logging;
 using McpServer.Protocol;
@@ -480,7 +481,9 @@ public class McpServerHandlerAuditTests
             // Argha - 2026-02-25 - inject mock or spy so we can assert calls
             auditLogger: auditLogger,
             // Argha - 2026-02-25 - Phase 6.3: no-op rate limiter; audit tests don't test rate limiting
-            rateLimiter: McpServer.RateLimiting.NullRateLimiter.Instance);
+            rateLimiter: McpServer.RateLimiting.NullRateLimiter.Instance,
+            // Argha - 2026-02-25 - Phase 6.4: no-op cache; audit tests don't test caching
+            responseCache: NullResponseCache.Instance);
     }
 
     private static async Task InitializeAsync(McpServerHandler handler)

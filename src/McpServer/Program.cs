@@ -1,5 +1,6 @@
 using McpServer;
 using McpServer.Audit;
+using McpServer.Caching;
 using McpServer.Configuration;
 using McpServer.Logging;
 using McpServer.Plugins;
@@ -136,6 +137,15 @@ if (rateLimitConfig.Enabled)
 else
     // Argha - 2026-02-25 - NullRateLimiter has a private ctor; register via factory
     services.AddSingleton<IRateLimiter>(_ => NullRateLimiter.Instance);
+
+// Argha - 2026-02-25 - Phase 6.4: register response cache settings and the appropriate cache implementation
+services.Configure<CacheSettings>(configuration.GetSection(CacheSettings.SectionName));
+var cacheConfig = configuration.GetSection(CacheSettings.SectionName).Get<CacheSettings>() ?? new CacheSettings();
+if (cacheConfig.Enabled)
+    services.AddSingleton<IResponseCache, MemoryResponseCache>();
+else
+    // Argha - 2026-02-25 - NullResponseCache has a private ctor; register via factory to reuse the singleton
+    services.AddSingleton<IResponseCache>(_ => NullResponseCache.Instance);
 
 // Argha - 2026-02-25 - Phase 6.2: register the appropriate audit logger based on configuration
 var auditConfig = configuration.GetSection(AuditSettings.SectionName).Get<AuditSettings>() ?? new AuditSettings();

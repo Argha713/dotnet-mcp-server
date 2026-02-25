@@ -145,6 +145,35 @@ public class AuditSettings
     public bool SanitizeArguments { get; set; } = true;
 }
 
+// Argha - 2026-02-25 - Phase 6.4: per-tool response cache settings
+public class CacheSettings
+{
+    public const string SectionName = "Cache";
+
+    /// <summary>
+    /// Set to false to disable all response caching. Default: true.
+    /// </summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// Default TTL in seconds for cached results when a tool has no specific override.
+    /// Set to 0 to disable caching by default. Default: 60.
+    /// </summary>
+    public int DefaultTtlSeconds { get; set; } = 60;
+
+    /// <summary>
+    /// Per-tool TTL overrides in seconds. Set a tool's value to 0 to bypass the cache entirely for that tool.
+    /// Example: { "datetime": 0, "sql_query": 300, "text": 600 }
+    /// </summary>
+    public Dictionary<string, int> ToolTtls { get; set; } = new();
+
+    /// <summary>
+    /// Maximum number of entries to keep in the in-memory cache. Default: 1000.
+    /// When full, expired entries are evicted first; then the oldest entry is removed.
+    /// </summary>
+    public int MaxEntries { get; set; } = 1000;
+}
+
 /// <summary>
 /// General server configuration
 /// </summary>

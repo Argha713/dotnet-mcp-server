@@ -792,8 +792,18 @@ dotnet run 2> log.txt
 - [x] Thread-safe per-tool buckets (`lock` per bucket, `ConcurrentDictionary` across tools)
 - [x] Disable entirely with `RateLimit:Enabled: false`
 
+#### Phase 6.4 — Response Caching ✅
+- [x] In-memory response cache with per-tool TTL configuration
+- [x] `Cache:DefaultTtlSeconds` (default: 60s) applies to any tool without an explicit override
+- [x] `Cache:ToolTtls` — per-tool TTL overrides (`"datetime": 0` to bypass, `"sql_query": 300` for 5 min, etc.)
+- [x] TTL of 0 bypasses the cache entirely for that tool (volatile tools: datetime, system_info, git, environment)
+- [x] Only successful results cached (`IsError = false`); transient errors always re-executed
+- [x] Cache hits audited with outcome `"CacheHit"` in the audit log
+- [x] Bounded cache capacity (`Cache:MaxEntries`, default 1000); evicts expired entries first, then oldest-inserted
+- [x] Thread-safe `ConcurrentDictionary` backing store with lock-guarded eviction
+- [x] Disable entirely with `Cache:Enabled: false`
+
 #### Upcoming
-- [ ] Response caching with configurable TTL
 - [ ] Tool-level authentication & permissions
 
 ---

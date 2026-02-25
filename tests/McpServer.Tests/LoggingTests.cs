@@ -198,7 +198,9 @@ public class LoggingHandlerTests
             // Argha - 2026-02-25 - Phase 6.2: no-op audit logger for unit tests
             auditLogger: McpServer.Audit.NullAuditLogger.Instance,
             // Argha - 2026-02-25 - Phase 6.3: no-op rate limiter for unit tests
-            rateLimiter: McpServer.RateLimiting.NullRateLimiter.Instance);
+            rateLimiter: McpServer.RateLimiting.NullRateLimiter.Instance,
+            // Argha - 2026-02-25 - Phase 6.4: no-op cache for unit tests
+            responseCache: McpServer.Caching.NullResponseCache.Instance);
     }
 
     private static string MakeRequest(string method, int id = 1, string? paramsJson = null)

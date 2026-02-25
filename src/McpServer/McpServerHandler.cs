@@ -1,4 +1,5 @@
 using McpServer.Audit;
+using McpServer.Caching;
 using McpServer.Configuration;
 using McpServer.Logging;
 using McpServer.Progress;
@@ -32,6 +33,8 @@ public class McpServerHandler
     private readonly IAuditLogger _auditLogger;
     // Argha - 2026-02-25 - Phase 6.3: enforces per-tool call-rate limits
     private readonly IRateLimiter _rateLimiter;
+    // Argha - 2026-02-25 - Phase 6.4: caches successful tool results to avoid redundant execution
+    private readonly IResponseCache _responseCache;
     private readonly JsonSerializerOptions _jsonOptions;
     // Argha - 2026-02-17 - initialization gate: reject tool calls before handshake completes (MCP spec)
     private bool _initialized;
@@ -46,7 +49,9 @@ public class McpServerHandler
         // Argha - 2026-02-25 - Phase 6.2: audit logger injected; NullAuditLogger used in tests
         IAuditLogger auditLogger,
         // Argha - 2026-02-25 - Phase 6.3: rate limiter injected; NullRateLimiter used in tests
-        IRateLimiter rateLimiter)
+        IRateLimiter rateLimiter,
+        // Argha - 2026-02-25 - Phase 6.4: response cache injected; NullResponseCache used in tests
+        IResponseCache responseCache)
     {
         _tools = tools;
         _resourceProviders = resourceProviders;
@@ -56,6 +61,7 @@ public class McpServerHandler
         _logSink = logSink;
         _auditLogger = auditLogger;
         _rateLimiter = rateLimiter;
+        _responseCache = responseCache;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -338,10 +344,29 @@ public class McpServerHandler
             };
         }
 
+        // Argha - 2026-02-25 - Phase 6.4: check the response cache before executing the tool
+        var cacheKey = CacheKeyBuilder.Build(callParams.Name, action, arguments);
+        if (_responseCache.TryGet(callParams.Name, cacheKey, out var cachedResult))
+        {
+            sw.Stop();
+            _logger.LogDebug("Cache hit for tool '{Tool}' key '{Key}'", callParams.Name, cacheKey);
+            await WriteAuditAsync(callParams.Name, action, arguments, "CacheHit", null, correlationId, sw.ElapsedMilliseconds);
+
+            return new JsonRpcResponse
+            {
+                Id = request.Id,
+                Result = cachedResult
+            };
+        }
+
         try
         {
             var result = await tool.ExecuteAsync(arguments, progressReporter, cancellationToken);
             sw.Stop();
+
+            // Argha - 2026-02-25 - Phase 6.4: only cache successful results; errors may be transient
+            if (!result.IsError)
+                _responseCache.Set(callParams.Name, cacheKey, result);
 
             // Argha - 2026-02-25 - Phase 6.2: record successful invocation
             await WriteAuditAsync(callParams.Name, action, arguments, "Success", null, correlationId, sw.ElapsedMilliseconds);

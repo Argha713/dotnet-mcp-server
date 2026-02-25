@@ -607,7 +607,8 @@ public class McpServerHandlerTests
         // Argha - 2026-02-24 - pass a no-op McpLogSink (writer never initialised in unit tests)
         // Argha - 2026-02-25 - Phase 6.2: pass NullAuditLogger — handler tests do not verify audit output
         // Argha - 2026-02-25 - Phase 6.3: pass NullRateLimiter — handler tests do not verify rate limiting
-        _handler = new McpServerHandler(tools, Array.Empty<McpServer.Resources.IResourceProvider>(), Array.Empty<McpServer.Prompts.IPromptProvider>(), serverSettings, logger, new McpServer.Logging.McpLogSink(), McpServer.Audit.NullAuditLogger.Instance, McpServer.RateLimiting.NullRateLimiter.Instance);
+        // Argha - 2026-02-25 - Phase 6.4: pass NullResponseCache — handler tests do not verify caching
+        _handler = new McpServerHandler(tools, Array.Empty<McpServer.Resources.IResourceProvider>(), Array.Empty<McpServer.Prompts.IPromptProvider>(), serverSettings, logger, new McpServer.Logging.McpLogSink(), McpServer.Audit.NullAuditLogger.Instance, McpServer.RateLimiting.NullRateLimiter.Instance, McpServer.Caching.NullResponseCache.Instance);
     }
 
     private static string MakeRequest(string method, int id = 1, string? paramsJson = null)
