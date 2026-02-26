@@ -18,7 +18,7 @@
     <PackageTags>mcp;model-context-protocol;ai;claude;copilot;dotnet;tools;filesystem;sql;http;git</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/Argha713/dotnet-mcp-server</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/Argha713/dotnet-mcp-server</PackageProjectUrl>
+    <PackageProjectUrl>https://argha713.github.io/dotnet-mcp-server/</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 

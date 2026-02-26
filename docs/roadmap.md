@@ -71,9 +71,52 @@
 
 ---
 
-### Upcoming
+### Phase 6.2 — Audit Logging ✅
 
-- [ ] Response caching with configurable TTL
-- [ ] Audit logging (every tool call logged to file)
-- [ ] Rate limiting per tool
-- [ ] Tool-level authentication & permissions
+- [x] Every tool call recorded to rolling daily JSONL files (`audit-yyyy-MM-dd.jsonl`)
+- [x] Captures: timestamp, correlation ID, tool name, action, sanitized arguments, outcome, error message, duration (ms)
+- [x] Sensitive argument values (password, token, api_key, etc.) replaced with `[REDACTED]` before writing to disk
+- [x] Configurable retention — files older than `Audit:RetentionDays` (default: 30) deleted on startup
+- [x] Log directory defaults to `{configDir}/audit/`, fully configurable via `Audit:LogDirectory`
+- [x] Audit failures are non-fatal — tool response always returned even if disk write fails
+- [x] Disable entirely with `Audit:Enabled: false`
+
+---
+
+### Phase 6.3 — Rate Limiting ✅
+
+- [x] Per-tool sliding window rate limiter (1-minute window)
+- [x] `RateLimit:DefaultLimitPerMinute` (default: 60) applies to any tool without an explicit override
+- [x] `RateLimit:ToolLimits` — per-tool overrides (e.g. `"sql_query": 20`, `"datetime": 0` for unlimited)
+- [x] Rate-limited calls return a clear `IsError` response with the tool name — AI can read and understand it
+- [x] Rate-limited calls are recorded in the audit log with outcome `"RateLimited"`
+- [x] Thread-safe per-tool buckets (`lock` per bucket, `ConcurrentDictionary` across tools)
+- [x] Disable entirely with `RateLimit:Enabled: false`
+
+---
+
+### Phase 6.4 — Response Caching ✅
+
+- [x] In-memory response cache with per-tool TTL configuration
+- [x] `Cache:DefaultTtlSeconds` (default: 60s) applies to any tool without an explicit override
+- [x] `Cache:ToolTtls` — per-tool TTL overrides (`"datetime": 0` to bypass, `"sql_query": 300` for 5 min, etc.)
+- [x] TTL of 0 bypasses the cache entirely for that tool (volatile tools: datetime, system_info, git, environment)
+- [x] Only successful results cached (`IsError = false`); transient errors always re-executed
+- [x] Cache hits audited with outcome `"CacheHit"` in the audit log
+- [x] Bounded cache capacity (`Cache:MaxEntries`, default 1000); evicts expired entries first, then oldest-inserted
+- [x] Thread-safe `ConcurrentDictionary` backing store with lock-guarded eviction
+- [x] Disable entirely with `Cache:Enabled: false`
+
+---
+
+## Phase 7 — Tool-level Authentication & Permissions ✅
+
+- [x] API key authentication layer — clients present `MCP_API_KEY` env var (set in Claude Desktop's `env` block)
+- [x] Per-key authorization — each key maps to an explicit `AllowedTools` list (`"*"` = all tools)
+- [x] Per-tool action allowlists — `AllowedActions` restricts individual actions within a tool
+- [x] `NullAuthorizationService` singleton — auth disabled by default (`Auth:Enabled: false`); fully backwards-compatible
+- [x] Auth check happens before rate limiting — unauthorized calls don't consume rate-limit tokens
+- [x] Unauthorized calls return `IsError=true` with a clear message — AI can read and understand it
+- [x] Audit log gains `clientIdentity` field — shows which key made each call
+- [x] Unauthorized calls audited with outcome `"Unauthorized"`
+- [x] Key is case-sensitive; tool names and action names are case-insensitive

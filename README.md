@@ -55,14 +55,18 @@ This server provides nine enterprise-ready tools:
 
 ---
 
-## Quick Start
+<details>
+<summary>🚀 Quick Start</summary>
 
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - Any MCP client (see [Supported Clients](#supported-clients) below)
 
-### Option A — Install as a Global Tool (Recommended)
+---
+
+<details>
+<summary>Option A — Install as a Global Tool (Recommended)</summary>
 
 ```bash
 dotnet tool install -g DotnetMcpServer
@@ -90,9 +94,12 @@ To update to the latest version later:
 dotnet tool update -g DotnetMcpServer
 ```
 
+</details>
+
 ---
 
-### Option B — Clone and Build
+<details>
+<summary>Option B — Clone and Build</summary>
 
 ```bash
 git clone https://github.com/Argha713/dotnet-mcp-server.git
@@ -129,9 +136,12 @@ Edit `src/McpServer/appsettings.json`:
 }
 ```
 
+</details>
+
 ---
 
-### Option C — Docker (No .NET Required)
+<details>
+<summary>Option C — Docker (No .NET Required)</summary>
 
 Run the server in a container alongside a demo SQL Server — no .NET SDK needed on your machine.
 
@@ -171,19 +181,28 @@ The `docker build` step runs all tests — if any test fail, the build is aborte
 
 > **Note:** Replace `/path/to/docker/appsettings.json` with the absolute path to your `docker/appsettings.json` file. On Windows use forward slashes or escape backslashes.
 
----
-
-### 3. Connect to Your MCP Client
-
-Pick your client below and follow the setup instructions.
-
-> **Note:** All client config examples below use the global tool command `dotnet-mcp-server`. If you are using Option B (clone & build), replace `"command": "dotnet-mcp-server"` with `"command": "dotnet", "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]` instead.
+</details>
 
 ---
 
-## Supported Clients
+<details>
+<summary>Connect to Your MCP Client</summary>
 
-### Claude Desktop
+Pick your client in the **[Supported Clients](#supported-clients)** section below and follow the setup instructions.
+
+> **Note:** All client config examples use the global tool command `dotnet-mcp-server`. If you are using Option B (clone & build), replace `"command": "dotnet-mcp-server"` with `"command": "dotnet", "args": ["run", "--project", "C:\\path\\to\\dotnet-mcp-server\\src\\McpServer"]` instead.
+
+</details>
+
+</details>
+
+---
+
+<details>
+<summary>🖥️ Supported Clients</summary>
+
+<details>
+<summary>Claude Desktop</summary>
 
 **Config file location:**
 | OS | Path |
@@ -205,9 +224,10 @@ Pick your client below and follow the setup instructions.
 
 Restart Claude Desktop. You should see the tools available in the chat.
 
----
+</details>
 
-### VS Code — GitHub Copilot (Built-in)
+<details>
+<summary>VS Code — GitHub Copilot (Built-in)</summary>
 
 VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension needed — just VS Code 1.99+ with Copilot enabled.
 
@@ -244,9 +264,10 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 > }
 > ```
 
----
+</details>
 
-### VS Code — Continue.dev (Open Source)
+<details>
+<summary>VS Code — Continue.dev (Open Source)</summary>
 
 [Continue](https://continue.dev) is a free, open-source AI coding assistant for VS Code and JetBrains.
 
@@ -271,9 +292,10 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 
 **Step 5:** Open Continue chat panel. The tools will be available in agent mode.
 
----
+</details>
 
-### VS Code — Cline (Open Source)
+<details>
+<summary>VS Code — Cline (Open Source)</summary>
 
 [Cline](https://github.com/cline/cline) is a free, open-source autonomous AI coding agent for VS Code.
 
@@ -295,9 +317,10 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 
 **Step 4:** Restart Cline. The tools should appear in the MCP Servers section.
 
----
+</details>
 
-### Cursor
+<details>
+<summary>Cursor</summary>
 
 [Cursor](https://cursor.com) is an AI-first code editor with built-in MCP support.
 
@@ -319,9 +342,10 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 
 **Step 4:** Restart Cursor. Use the tools in Composer (Agent mode).
 
----
+</details>
 
-### Windsurf (Codeium)
+<details>
+<summary>Windsurf (Codeium)</summary>
 
 [Windsurf](https://codeium.com/windsurf) is an AI-powered editor by Codeium with MCP support.
 
@@ -341,9 +365,10 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 
 **Step 3:** Restart Windsurf. Tools are available in Cascade (the AI chat).
 
----
+</details>
 
-### Claude Code (CLI)
+<details>
+<summary>Claude Code (CLI)</summary>
 
 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) is Anthropic's CLI tool. It supports MCP servers natively.
 
@@ -353,9 +378,10 @@ claude mcp add dotnet-mcp-server dotnet-mcp-server
 
 That's it — Claude Code will auto-start the server when needed.
 
----
+</details>
 
-### ChatGPT Desktop
+<details>
+<summary>ChatGPT Desktop</summary>
 
 OpenAI's ChatGPT desktop app supports MCP servers (requires Plus plan).
 
@@ -370,9 +396,10 @@ OpenAI's ChatGPT desktop app supports MCP servers (requires Plus plan).
 
 **Step 4:** Restart ChatGPT. Tools appear in the chat.
 
----
+</details>
 
-### Manual Testing (No Client Needed)
+<details>
+<summary>Manual Testing (No Client Needed)</summary>
 
 You can test the server directly from any terminal:
 
@@ -391,39 +418,57 @@ Then paste JSON-RPC messages line by line:
 
 > **Note:** Replace `C:\path\to\dotnet-mcp-server` with the actual path where you cloned the repo in all examples above.
 
+</details>
+
+</details>
+
 ---
 
-## Tool Usage Examples
+<details>
+<summary>💬 Tool Usage Examples</summary>
 
-### DateTime Tool
+<details>
+<summary>DateTime Tool</summary>
 
 Ask Claude:
 - *"What time is it in Tokyo?"*
 - *"Convert 3pm EST to IST"*
 - *"What's the current UTC time?"*
 
-### File System Tool
+</details>
+
+<details>
+<summary>File System Tool</summary>
 
 Ask Claude:
 - *"List files in my Documents folder"*
 - *"Read the contents of README.md"*
 - *"Search for all .cs files in my projects"*
 
-### SQL Query Tool
+</details>
+
+<details>
+<summary>SQL Query Tool</summary>
 
 Ask Claude:
 - *"Show me the tables in MyDB database"*
 - *"Query the top 10 customers by revenue"*
 - *"Describe the structure of the Orders table"*
 
-### HTTP Tool
+</details>
+
+<details>
+<summary>HTTP Tool</summary>
 
 Ask Claude:
 - *"Get my GitHub profile info"*
 - *"Fetch the latest posts from JSONPlaceholder API"*
 - *"What APIs can you access?"*
 
-### Text Tool
+</details>
+
+<details>
+<summary>Text Tool</summary>
 
 Ask Claude:
 - *"Find all email addresses in this text"*
@@ -432,7 +477,10 @@ Ask Claude:
 - *"Show me the diff between these two configs"*
 - *"Pretty-print this minified JSON"*
 
-### Data Transform Tool
+</details>
+
+<details>
+<summary>Data Transform Tool</summary>
 
 Ask Claude:
 - *"Convert this CSV to JSON"*
@@ -441,14 +489,20 @@ Ask Claude:
 - *"Generate a SHA256 hash of this text"*
 - *"Convert this XML response to JSON"*
 
-### Environment Tool
+</details>
+
+<details>
+<summary>Environment Tool</summary>
 
 Ask Claude:
 - *"What is my JAVA_HOME set to?"*
 - *"Show me all Node-related environment variables"*
 - *"Is DOCKER_HOST configured?"*
 
-### System Info Tool
+</details>
+
+<details>
+<summary>System Info Tool</summary>
 
 Ask Claude:
 - *"How much disk space do I have?"*
@@ -456,7 +510,10 @@ Ask Claude:
 - *"What's my OS version and .NET runtime?"*
 - *"Show me my network interfaces"*
 
-### Git Tool
+</details>
+
+<details>
+<summary>Git Tool</summary>
 
 Ask Claude:
 - *"What files have I changed in this repo?"*
@@ -464,11 +521,17 @@ Ask Claude:
 - *"What's the diff of my current changes?"*
 - *"Who last modified line 42 of Program.cs?"*
 
+</details>
+
+</details>
+
 ---
 
-## Configuration Reference
+<details>
+<summary>⚙️ Configuration Reference</summary>
 
-### Example Profiles
+<details>
+<summary>Example Profiles</summary>
 
 Ready-to-use configuration files are provided in [`examples/configs/`](examples/configs/):
 
@@ -480,9 +543,10 @@ Ready-to-use configuration files are provided in [`examples/configs/`](examples/
 
 Copy one of these to your config directory and edit to match your environment.
 
----
+</details>
 
-### File System Settings
+<details>
+<summary>File System Settings</summary>
 
 ```json
 {
@@ -495,7 +559,10 @@ Copy one of these to your config directory and edit to match your environment.
 }
 ```
 
-### SQL Settings
+</details>
+
+<details>
+<summary>SQL Settings</summary>
 
 ```json
 {
@@ -514,7 +581,10 @@ Copy one of these to your config directory and edit to match your environment.
 }
 ```
 
-### HTTP Settings
+</details>
+
+<details>
+<summary>HTTP Settings</summary>
 
 ```json
 {
@@ -529,9 +599,14 @@ Copy one of these to your config directory and edit to match your environment.
 }
 ```
 
+</details>
+
+</details>
+
 ---
 
-## Architecture
+<details>
+<summary>🏗️ Architecture</summary>
 
 ```
 ┌──────────────┐ ┌──────────┐ ┌────────┐ ┌──────────┐
@@ -574,9 +649,12 @@ Copy one of these to your config directory and edit to match your environment.
              Files SQL  APIs   Git  OS
 ```
 
+</details>
+
 ---
 
-## Project Structure
+<details>
+<summary>📂 Project Structure</summary>
 
 ```
 dotnet-mcp-server/
@@ -603,9 +681,12 @@ dotnet-mcp-server/
 └── README.md
 ```
 
+</details>
+
 ---
 
-## Adding Custom Tools
+<details>
+<summary>🔧 Adding Custom Tools</summary>
 
 Create a new class implementing `ITool`:
 
@@ -614,7 +695,7 @@ public class MyCustomTool : ITool
 {
     public string Name => "my_tool";
     public string Description => "Does something useful";
-    
+
     public JsonSchema InputSchema => new()
     {
         Type = "object",
@@ -626,7 +707,7 @@ public class MyCustomTool : ITool
     };
 
     public async Task<ToolCallResult> ExecuteAsync(
-        Dictionary<string, object>? arguments, 
+        Dictionary<string, object>? arguments,
         CancellationToken cancellationToken)
     {
         var input = arguments?["input"]?.ToString();
@@ -647,13 +728,17 @@ Register in `Program.cs`:
 services.AddSingleton<ITool, MyCustomTool>();
 ```
 
+</details>
+
 ---
 
-## Plugin Development
+<details>
+<summary>🔌 Plugin Development</summary>
 
 You can extend the server with your own tools — no need to fork or modify the core project. Plugins are plain .NET class libraries that implement `ITool` and get dropped into the `plugins/` folder.
 
-### Scaffold a plugin in one command
+<details>
+<summary>Scaffold a plugin in one command</summary>
 
 **Step 1:** Install the template package (once):
 
@@ -688,7 +773,10 @@ cp bin/Release/net8.0/WeatherTool.dll ~/.config/dotnet-mcp-server/plugins/
 
 Restart the server — your tool appears in `tools/list` automatically.
 
-### Plugin configuration
+</details>
+
+<details>
+<summary>Plugin configuration</summary>
 
 Pass values to your plugin via `appsettings.json`:
 
@@ -704,9 +792,14 @@ Pass values to your plugin via `appsettings.json`:
 
 Use the `PluginContext` constructor pattern in your tool class to read these values (the scaffolded file includes a commented-out example).
 
+</details>
+
+</details>
+
 ---
 
-## Troubleshooting
+<details open>
+<summary>🔍 Troubleshooting</summary>
 
 | Problem | Solution |
 |---------|----------|
@@ -725,95 +818,7 @@ Logs are written to stderr. To see them:
 dotnet run 2> log.txt
 ```
 
----
-
-## Roadmap
-
-### Phase 1 — Security & Stability ✅ Complete
-- [x] Fix SQL injection via subqueries (block `;`, `--`, `/* */`, compound statements, 17 dangerous keywords)
-- [x] Fix path traversal edge case (trailing separator check prevents `C:\AllowedPathEvil` matching `C:\AllowedPath`)
-- [x] Add initialization gate (reject `tools/list` and `tools/call` before `initialize` handshake)
-- [x] Config validation on startup (warn about missing paths, empty connection strings, malformed hosts)
-- [x] Expand test coverage — **8 → 63 tests** (SqlQueryValidation, FileSystemTool, HttpTool, McpServerHandler)
-
-### Phase 2 — New Tools ✅ Complete
-- [x] **Text Tool** — `regex_match`, `regex_replace`, `word_count`, `diff_text`, `format_json/xml`
-- [x] **Data Transform Tool** — `json_query`, `csv_to_json`, `json_to_csv`, `xml_to_json`, `base64_encode/decode`, `hash`
-- [x] **Environment Tool** — `get`, `list`, `has` (with hardcoded blocklist for sensitive vars)
-- [x] **System Info Tool** — `system_info` (OS/CPU/RAM/disk), `processes`, `network`
-- [x] **Git Tool** — `status`, `log`, `diff`, `branch_list`, `blame` (read-only with path validation)
-- Added 5 new tools (4 → 9 total), **63 → 150 tests**, zero new NuGet dependencies
-
-### Phase 3 — Production Readiness ✅ Complete
-- [x] Dockerfile + docker-compose (one-command setup)
-- [x] GitHub Actions CI/CD (build, test on push/PR via `ci.yml`; release pipeline via `release.yml`)
-- [x] Self-contained single-file executables (win-x64, linux-x64, osx-arm64 — published on `v*` tags)
-- [x] `dotnet tool install -g dotnet-mcp-server` distribution
-- [x] `--init` config wizard for first-run setup
-- [x] `--validate` health check for all configured connections
-
-### Phase 4 — MCP Protocol Completeness ✅
-- [x] Resources support (`resources/list`, `resources/read`)
-- [x] Prompts support (`prompts/list`, `prompts/get`) with built-in templates
-- [x] Logging protocol (`logging/setLevel`, `notifications/message`)
-- [x] Progress notifications for long-running operations
-
-### Phase 5 — Developer Experience ✅
-- [x] Plugin architecture (drop-in tool DLLs from `/plugins` folder)
-- [x] `dotnet new mcp-tool` project template for custom tools
-- [x] Documentation site (Getting Started, Tool Reference, Plugin Guide) — https://argha713.github.io/dotnet-mcp-server
-- [x] Example configurations (`developer.json`, `data-analyst.json`, `api-integrator.json`)
-- [x] `CONTRIBUTING.md` + issue templates
-
-### Phase 6 — Advanced Features ✅
-
-#### Phase 6.1 — Multi-Database Support ✅
-- [x] Multi-database support: SQL Server, PostgreSQL, MySQL, SQLite
-- [x] `configure_connection` guided setup (no password through AI)
-- [x] `test_connection` with human-readable diagnostics (passwords never shown)
-- [x] Connection string sanitizer — passwords stripped from all error output
-- [x] Security & Trust documentation
-
-#### Phase 6.2 — Audit Logging ✅
-- [x] Every tool call recorded to rolling daily JSONL files (`audit-yyyy-MM-dd.jsonl`)
-- [x] Captures: timestamp, correlation ID, tool name, action, sanitized arguments, outcome, error message, duration (ms)
-- [x] Sensitive argument values (password, token, api_key, etc.) replaced with `[REDACTED]` before writing to disk
-- [x] Configurable retention — files older than `Audit:RetentionDays` (default: 30) deleted on startup
-- [x] Log directory defaults to `{configDir}/audit/`, fully configurable via `Audit:LogDirectory`
-- [x] Audit failures are non-fatal — tool response always returned even if disk write fails
-- [x] Disable entirely with `Audit:Enabled: false`
-
-#### Phase 6.3 — Rate Limiting ✅
-- [x] Per-tool sliding window rate limiter (1-minute window)
-- [x] `RateLimit:DefaultLimitPerMinute` (default: 60) applies to any tool without an explicit override
-- [x] `RateLimit:ToolLimits` — per-tool overrides (e.g. `"sql_query": 20`, `"datetime": 0` for unlimited)
-- [x] Rate-limited calls return a clear `IsError` response with the tool name — AI can read and understand it
-- [x] Rate-limited calls are recorded in the audit log with outcome `"RateLimited"`
-- [x] Thread-safe per-tool buckets (`lock` per bucket, `ConcurrentDictionary` across tools)
-- [x] Disable entirely with `RateLimit:Enabled: false`
-
-#### Phase 6.4 — Response Caching ✅
-- [x] In-memory response cache with per-tool TTL configuration
-- [x] `Cache:DefaultTtlSeconds` (default: 60s) applies to any tool without an explicit override
-- [x] `Cache:ToolTtls` — per-tool TTL overrides (`"datetime": 0` to bypass, `"sql_query": 300` for 5 min, etc.)
-- [x] TTL of 0 bypasses the cache entirely for that tool (volatile tools: datetime, system_info, git, environment)
-- [x] Only successful results cached (`IsError = false`); transient errors always re-executed
-- [x] Cache hits audited with outcome `"CacheHit"` in the audit log
-- [x] Bounded cache capacity (`Cache:MaxEntries`, default 1000); evicts expired entries first, then oldest-inserted
-- [x] Thread-safe `ConcurrentDictionary` backing store with lock-guarded eviction
-- [x] Disable entirely with `Cache:Enabled: false`
-
-### Phase 7 — Tool-level Authentication & Permissions ✅
-
-- [x] API key authentication layer — clients present `MCP_API_KEY` env var (set in Claude Desktop's `env` block)
-- [x] Per-key authorization — each key maps to an explicit `AllowedTools` list (`"*"` = all tools)
-- [x] Per-tool action allowlists — `AllowedActions` restricts individual actions within a tool
-- [x] `NullAuthorizationService` singleton — auth disabled by default (`Auth:Enabled: false`); fully backwards-compatible
-- [x] Auth check happens before rate limiting — unauthorized calls don't consume rate-limit tokens
-- [x] Unauthorized calls return `IsError=true` with a clear message — AI can read and understand it
-- [x] Audit log gains `clientIdentity` field — shows which key made each call
-- [x] Unauthorized calls audited with outcome `"Unauthorized"`
-- [x] Key is case-sensitive; tool names and action names are case-insensitive
+</details>
 
 ---
 
