@@ -822,6 +822,103 @@ dotnet run 2> log.txt
 
 ---
 
+## Roadmap
+
+<details>
+<summary><h3>✅ Phase 1 — Security & Stability</h3></summary>
+
+- [x] Path traversal prevention for filesystem tool
+- [x] SQL injection prevention (SELECT-only enforcement)
+- [x] HTTP host allowlist validation with subdomain support
+- [x] XXE prevention in XML parsing
+- [x] ReDoS protection with regex timeout
+- [x] Environment variable sensitive-value masking
+
+</details>
+
+<details>
+<summary><h3>✅ Phase 2 — New Tools</h3></summary>
+
+- [x] Text tool (regex match/replace, word count, diff, format JSON/XML)
+- [x] Data transform tool (JSON query, CSV↔JSON↔XML conversion, base64, hashing)
+- [x] Environment tool (get/list/check env vars with masking)
+- [x] System info tool (OS details, processes, disk, network)
+- [x] Git tool (read-only: status, log, diff, branches, blame)
+
+</details>
+
+<details>
+<summary><h3>✅ Phase 3 — Production Readiness</h3></summary>
+
+- [x] 3.1 — CI/CD pipeline with self-contained binary publishing
+- [x] 3.2 — `--validate` flag for configuration health check
+- [x] 3.3 — `--init` interactive setup wizard
+- [x] 3.4 — NuGet global tool (`dotnet tool install -g DotnetMcpServer`)
+- [x] 3.5 — Docker multi-stage Alpine build with test gate
+
+</details>
+
+<details>
+<summary><h3>✅ Phase 4 — MCP Protocol Completeness</h3></summary>
+
+- [x] 4.1 — Resources protocol (`resources/list`, `resources/read`)
+- [x] 4.2 — Prompts protocol (`prompts/list`, `prompts/get`)
+- [x] 4.3 — Logging protocol (`logging/setLevel`, log forwarding to client)
+- [x] 4.4 — Progress notifications (per-tool streaming progress tokens)
+
+</details>
+
+<details>
+<summary><h3>✅ Phase 5 — Developer Experience</h3></summary>
+
+- [x] 5.1 — Plugin architecture (drop-in DLL plugins)
+- [x] 5.2 — `dotnet new mcp-tool` template
+- [x] 5.3 — Example configuration profiles (developer, data-analyst, api-integrator)
+- [x] 5.4 — CONTRIBUTING.md and GitHub issue templates
+- [x] 5.5 — GitHub Pages documentation site (MkDocs Material)
+
+</details>
+
+<details>
+<summary><h3>✅ Phase 6 — Advanced Features</h3></summary>
+
+- [x] 6.1 — Multi-database support (SQL Server, PostgreSQL, MySQL, SQLite)
+- [x] 6.2 — Audit logging (rolling JSONL files with argument sanitization)
+- [x] 6.3 — Per-tool sliding window rate limiting
+- [x] 6.4 — Per-tool response caching with configurable TTL
+
+</details>
+
+<details>
+<summary><h3>✅ Phase 7 — Tool-level Authentication & Permissions</h3></summary>
+
+- [x] 7.1 — API key authentication via `MCP_API_KEY` environment variable
+- [x] 7.2 — Per-key tool allowlists (restrict a key to specific tools)
+- [x] 7.3 — Per-key action allowlists (restrict a key to specific actions within a tool)
+- [x] 7.4 — Audit records include client identity name
+
+</details>
+
+<details>
+<summary><h3>Phase 8 — Document Processing Tool</h3></summary>
+
+- [x] 8.1 — PDF reading (text extraction, metadata, search) via PdfPig
+- [ ] 8.2 — Office documents (Word .docx, Excel .xlsx, PowerPoint .pptx) via OpenXml + ClosedXML
+- [ ] 8.3 — Table extraction (Word + PDF), Excel sheet listing with row/col counts, progress reporting
+
+</details>
+
+<details>
+<summary><h3>Phase 9 — Notification & Communication Tool</h3></summary>
+
+- [ ] 9.1 — Email notifications via SMTP (MailKit) with recipient allowlist
+- [ ] 9.2 — Microsoft Teams + Slack webhook notifications
+- [ ] 9.3 — Generic HTTP webhook + Markdown-to-Adaptive-Card/Block-Kit templating
+
+</details>
+
+---
+
 ## Contributing
 
 Bug reports, feature requests, and pull requests are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting.

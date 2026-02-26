@@ -3,6 +3,7 @@ using McpServer.Audit;
 using McpServer.Auth;
 using McpServer.Caching;
 using McpServer.Configuration;
+using McpServer.Documents;
 using McpServer.Logging;
 using McpServer.Plugins;
 using McpServer.Prompts;
@@ -62,6 +63,8 @@ services.Configure<FileSystemSettings>(configuration.GetSection(FileSystemSettin
 services.Configure<SqlSettings>(configuration.GetSection(SqlSettings.SectionName));
 services.Configure<HttpSettings>(configuration.GetSection(HttpSettings.SectionName));
 services.Configure<EnvironmentSettings>(configuration.GetSection(EnvironmentSettings.SectionName));
+// Argha - 2026-02-26 - Phase 8: document processing settings
+services.Configure<DocumentSettings>(configuration.GetSection(DocumentSettings.SectionName));
 
 // Argha - 2026-02-25 - Phase 6.2: audit settings with runtime resolution of the log directory
 services.Configure<AuditSettings>(configuration.GetSection(AuditSettings.SectionName));
@@ -106,6 +109,9 @@ services.AddSingleton<ITool, DataTransformTool>();
 services.AddSingleton<ITool, EnvironmentTool>();
 services.AddSingleton<ITool, SystemInfoTool>();
 services.AddSingleton<ITool, GitTool>();
+// Argha - 2026-02-26 - Phase 8: document processing tool + readers
+services.AddSingleton<IDocumentReader, PdfDocumentReader>();
+services.AddSingleton<ITool, DocumentTool>();
 
 // Argha - 2026-02-24 - load plugin tools from the configured plugins directory.
 // A dedicated minimal logger factory is used here because the full DI-managed logger (with the

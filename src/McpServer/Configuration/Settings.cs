@@ -210,6 +210,28 @@ public class ApiKeyConfig
     public Dictionary<string, List<string>> AllowedActions { get; set; } = new();
 }
 
+// Argha - 2026-02-26 - Phase 8: document processing settings
+public class DocumentSettings
+{
+    public const string SectionName = "Document";
+
+    /// <summary>
+    /// Maximum allowed document file size in MB. Default: 25.
+    /// Binary formats (PDF, DOCX) are larger than plain text; higher than the filesystem 1 MB limit.
+    /// </summary>
+    public int MaxFileSizeMb { get; set; } = 25;
+
+    /// <summary>
+    /// Maximum number of output characters per read call (AI context window protection). Default: 50 000.
+    /// </summary>
+    public int MaxOutputChars { get; set; } = 50_000;
+
+    /// <summary>
+    /// Maximum rows returned per Excel sheet read. Default: 5 000.
+    /// </summary>
+    public int MaxExcelRows { get; set; } = 5_000;
+}
+
 /// <summary>
 /// General server configuration
 /// </summary>

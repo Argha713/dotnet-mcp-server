@@ -33,6 +33,10 @@
     <PackageReference Include="Npgsql" Version="8.0.5" />
     <PackageReference Include="MySqlConnector" Version="2.3.7" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+    <!-- Argha - 2026-02-26 - Phase 8: document processing packages (PdfPig only has pre-release 0.1.x; stable 0.0.x is too old) -->
+    <PackageReference Include="PdfPig" Version="0.1.14-alpha-20260223-a4047" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.1.0" />
+    <PackageReference Include="ClosedXML" Version="0.104.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
