@@ -56,7 +56,7 @@ This server provides nine enterprise-ready tools:
 ---
 
 <details>
-<summary>🚀 Quick Start</summary>
+<summary><h2>🚀 Quick Start</h2></summary>
 
 ### Prerequisites
 
@@ -66,7 +66,7 @@ This server provides nine enterprise-ready tools:
 ---
 
 <details>
-<summary>Option A — Install as a Global Tool (Recommended)</summary>
+<summary><h3>Option A — Install as a Global Tool (Recommended)</h3></summary>
 
 ```bash
 dotnet tool install -g DotnetMcpServer
@@ -99,7 +99,7 @@ dotnet tool update -g DotnetMcpServer
 ---
 
 <details>
-<summary>Option B — Clone and Build</summary>
+<summary><h3>Option B — Clone and Build</h3></summary>
 
 ```bash
 git clone https://github.com/Argha713/dotnet-mcp-server.git
@@ -141,7 +141,7 @@ Edit `src/McpServer/appsettings.json`:
 ---
 
 <details>
-<summary>Option C — Docker (No .NET Required)</summary>
+<summary><h3>Option C — Docker (No .NET Required)</h3></summary>
 
 Run the server in a container alongside a demo SQL Server — no .NET SDK needed on your machine.
 
@@ -186,7 +186,7 @@ The `docker build` step runs all tests — if any test fail, the build is aborte
 ---
 
 <details>
-<summary>Connect to Your MCP Client</summary>
+<summary><h3>Connect to Your MCP Client</h3></summary>
 
 Pick your client in the **[Supported Clients](#supported-clients)** section below and follow the setup instructions.
 
@@ -199,10 +199,10 @@ Pick your client in the **[Supported Clients](#supported-clients)** section belo
 ---
 
 <details>
-<summary>🖥️ Supported Clients</summary>
+<summary><h2>🖥️ Supported Clients</h2></summary>
 
 <details>
-<summary>Claude Desktop</summary>
+<summary><h3>Claude Desktop</h3></summary>
 
 **Config file location:**
 | OS | Path |
@@ -227,7 +227,7 @@ Restart Claude Desktop. You should see the tools available in the chat.
 </details>
 
 <details>
-<summary>VS Code — GitHub Copilot (Built-in)</summary>
+<summary><h3>VS Code — GitHub Copilot (Built-in)</h3></summary>
 
 VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension needed — just VS Code 1.99+ with Copilot enabled.
 
@@ -267,7 +267,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 </details>
 
 <details>
-<summary>VS Code — Continue.dev (Open Source)</summary>
+<summary><h3>VS Code — Continue.dev (Open Source)</h3></summary>
 
 [Continue](https://continue.dev) is a free, open-source AI coding assistant for VS Code and JetBrains.
 
@@ -295,7 +295,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 </details>
 
 <details>
-<summary>VS Code — Cline (Open Source)</summary>
+<summary><h3>VS Code — Cline (Open Source)</h3></summary>
 
 [Cline](https://github.com/cline/cline) is a free, open-source autonomous AI coding agent for VS Code.
 
@@ -320,7 +320,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 </details>
 
 <details>
-<summary>Cursor</summary>
+<summary><h3>Cursor</h3></summary>
 
 [Cursor](https://cursor.com) is an AI-first code editor with built-in MCP support.
 
@@ -345,7 +345,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 </details>
 
 <details>
-<summary>Windsurf (Codeium)</summary>
+<summary><h3>Windsurf (Codeium)</h3></summary>
 
 [Windsurf](https://codeium.com/windsurf) is an AI-powered editor by Codeium with MCP support.
 
@@ -368,7 +368,7 @@ VS Code has **native MCP support** via GitHub Copilot (agent mode). No extension
 </details>
 
 <details>
-<summary>Claude Code (CLI)</summary>
+<summary><h3>Claude Code (CLI)</h3></summary>
 
 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) is Anthropic's CLI tool. It supports MCP servers natively.
 
@@ -381,7 +381,7 @@ That's it — Claude Code will auto-start the server when needed.
 </details>
 
 <details>
-<summary>ChatGPT Desktop</summary>
+<summary><h3>ChatGPT Desktop</h3></summary>
 
 OpenAI's ChatGPT desktop app supports MCP servers (requires Plus plan).
 
@@ -399,7 +399,7 @@ OpenAI's ChatGPT desktop app supports MCP servers (requires Plus plan).
 </details>
 
 <details>
-<summary>Manual Testing (No Client Needed)</summary>
+<summary><h3>Manual Testing (No Client Needed)</h3></summary>
 
 You can test the server directly from any terminal:
 
@@ -425,10 +425,10 @@ Then paste JSON-RPC messages line by line:
 ---
 
 <details>
-<summary>💬 Tool Usage Examples</summary>
+<summary><h2>💬 Tool Usage Examples</h2></summary>
 
 <details>
-<summary>DateTime Tool</summary>
+<summary><h3>DateTime Tool</h3></summary>
 
 Ask Claude:
 - *"What time is it in Tokyo?"*
@@ -438,7 +438,7 @@ Ask Claude:
 </details>
 
 <details>
-<summary>File System Tool</summary>
+<summary><h3>File System Tool</h3></summary>
 
 Ask Claude:
 - *"List files in my Documents folder"*
@@ -448,7 +448,7 @@ Ask Claude:
 </details>
 
 <details>
-<summary>SQL Query Tool</summary>
+<summary><h3>SQL Query Tool</h3></summary>
 
 Ask Claude:
 - *"Show me the tables in MyDB database"*
@@ -458,7 +458,7 @@ Ask Claude:
 </details>
 
 <details>
-<summary>HTTP Tool</summary>
+<summary><h3>HTTP Tool</h3></summary>
 
 Ask Claude:
 - *"Get my GitHub profile info"*
@@ -468,7 +468,7 @@ Ask Claude:
 </details>
 
 <details>
-<summary>Text Tool</summary>
+<summary><h3>Text Tool</h3></summary>
 
 Ask Claude:
 - *"Find all email addresses in this text"*
@@ -480,7 +480,7 @@ Ask Claude:
 </details>
 
 <details>
-<summary>Data Transform Tool</summary>
+<summary><h3>Data Transform Tool</h3></summary>
 
 Ask Claude:
 - *"Convert this CSV to JSON"*
@@ -492,7 +492,7 @@ Ask Claude:
 </details>
 
 <details>
-<summary>Environment Tool</summary>
+<summary><h3>Environment Tool</h3></summary>
 
 Ask Claude:
 - *"What is my JAVA_HOME set to?"*
@@ -502,7 +502,7 @@ Ask Claude:
 </details>
 
 <details>
-<summary>System Info Tool</summary>
+<summary><h3>System Info Tool</h3></summary>
 
 Ask Claude:
 - *"How much disk space do I have?"*
@@ -513,7 +513,7 @@ Ask Claude:
 </details>
 
 <details>
-<summary>Git Tool</summary>
+<summary><h3>Git Tool</h3></summary>
 
 Ask Claude:
 - *"What files have I changed in this repo?"*
@@ -528,10 +528,10 @@ Ask Claude:
 ---
 
 <details>
-<summary>⚙️ Configuration Reference</summary>
+<summary><h2>⚙️ Configuration Reference</h2></summary>
 
 <details>
-<summary>Example Profiles</summary>
+<summary><h3>Example Profiles</h3></summary>
 
 Ready-to-use configuration files are provided in [`examples/configs/`](examples/configs/):
 
@@ -546,7 +546,7 @@ Copy one of these to your config directory and edit to match your environment.
 </details>
 
 <details>
-<summary>File System Settings</summary>
+<summary><h3>File System Settings</h3></summary>
 
 ```json
 {
@@ -562,7 +562,7 @@ Copy one of these to your config directory and edit to match your environment.
 </details>
 
 <details>
-<summary>SQL Settings</summary>
+<summary><h3>SQL Settings</h3></summary>
 
 ```json
 {
@@ -584,7 +584,7 @@ Copy one of these to your config directory and edit to match your environment.
 </details>
 
 <details>
-<summary>HTTP Settings</summary>
+<summary><h3>HTTP Settings</h3></summary>
 
 ```json
 {
@@ -606,7 +606,7 @@ Copy one of these to your config directory and edit to match your environment.
 ---
 
 <details>
-<summary>🏗️ Architecture</summary>
+<summary><h2>🏗️ Architecture</h2></summary>
 
 ```
 ┌──────────────┐ ┌──────────┐ ┌────────┐ ┌──────────┐
@@ -654,7 +654,7 @@ Copy one of these to your config directory and edit to match your environment.
 ---
 
 <details>
-<summary>📂 Project Structure</summary>
+<summary><h2>📂 Project Structure</h2></summary>
 
 ```
 dotnet-mcp-server/
@@ -686,7 +686,7 @@ dotnet-mcp-server/
 ---
 
 <details>
-<summary>🔧 Adding Custom Tools</summary>
+<summary><h2>🔧 Adding Custom Tools</h2></summary>
 
 Create a new class implementing `ITool`:
 
@@ -733,12 +733,12 @@ services.AddSingleton<ITool, MyCustomTool>();
 ---
 
 <details>
-<summary>🔌 Plugin Development</summary>
+<summary><h2>🔌 Plugin Development</h2></summary>
 
 You can extend the server with your own tools — no need to fork or modify the core project. Plugins are plain .NET class libraries that implement `ITool` and get dropped into the `plugins/` folder.
 
 <details>
-<summary>Scaffold a plugin in one command</summary>
+<summary><h3>Scaffold a plugin in one command</h3></summary>
 
 **Step 1:** Install the template package (once):
 
@@ -776,7 +776,7 @@ Restart the server — your tool appears in `tools/list` automatically.
 </details>
 
 <details>
-<summary>Plugin configuration</summary>
+<summary><h3>Plugin configuration</h3></summary>
 
 Pass values to your plugin via `appsettings.json`:
 
@@ -799,7 +799,7 @@ Use the `PluginContext` constructor pattern in your tool class to read these val
 ---
 
 <details open>
-<summary>🔍 Troubleshooting</summary>
+<summary><h2>🔍 Troubleshooting</h2></summary>
 
 | Problem | Solution |
 |---------|----------|
