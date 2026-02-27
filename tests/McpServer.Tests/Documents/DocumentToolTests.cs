@@ -338,6 +338,202 @@ public class DocumentToolTests
 }
 
 // ============================================================
+// Phase 8.2: DocumentTool unit tests — sheet param, list_sheets action, extension routing
+// ============================================================
+public class DocumentToolPhase82Tests
+{
+    private static DocumentTool CreateToolWithReaders(params IDocumentReader[] readers)
+    {
+        var fsOptions = Options.Create(new FileSystemSettings
+        {
+            AllowedPaths = new List<string> { Path.GetTempPath() }
+        });
+        var docOptions = Options.Create(new DocumentSettings());
+        return new DocumentTool(fsOptions, docOptions, readers);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListSheets_CallsReaderAndReturnsSheets()
+    {
+        // Argha - 2026-02-27 - mock reader returns two worksheets; verify table output
+        var mockReader = new Mock<IDocumentReader>();
+        mockReader.Setup(r => r.SupportedExtensions).Returns(new[] { ".xlsx" });
+        mockReader
+            .Setup(r => r.ListSheetsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new WorksheetSummary("Sales", 100, 5),
+                new WorksheetSummary("Config", 10, 3)
+            });
+
+        var tool = CreateToolWithReaders(mockReader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.xlsx");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var args = new Dictionary<string, object> { ["action"] = "list_sheets", ["path"] = path };
+            var result = await tool.ExecuteAsync(args);
+
+            result.IsError.Should().BeFalse();
+            result.Content[0].Text.Should().Contain("Sales");
+            result.Content[0].Text.Should().Contain("Config");
+            result.Content[0].Text.Should().Contain("100");
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Read_PassesSheetParameterToReader()
+    {
+        // Argha - 2026-02-27 - sheet arg should reach the reader via DocumentReadOptions.Sheet
+        var mockReader = new Mock<IDocumentReader>();
+        mockReader.Setup(r => r.SupportedExtensions).Returns(new[] { ".xlsx" });
+
+        DocumentReadOptions? capturedOptions = null;
+        mockReader
+            .Setup(r => r.ReadTextAsync(It.IsAny<string>(), It.IsAny<DocumentReadOptions>(), It.IsAny<CancellationToken>()))
+            .Callback<string, DocumentReadOptions, CancellationToken>((_, opts, _) => capturedOptions = opts)
+            .ReturnsAsync(new DocumentContent("cell data", 2, false));
+
+        var tool = CreateToolWithReaders(mockReader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.xlsx");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var args = new Dictionary<string, object>
+            {
+                ["action"] = "read",
+                ["path"] = path,
+                ["sheet"] = "MySheet"
+            };
+            await tool.ExecuteAsync(args);
+
+            capturedOptions.Should().NotBeNull();
+            capturedOptions!.Sheet.Should().Be("MySheet");
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Docx_RoutesToWordReader()
+    {
+        // Argha - 2026-02-27 - .docx extension should route to the docx-capable reader
+        var docxReader = new Mock<IDocumentReader>();
+        docxReader.Setup(r => r.SupportedExtensions).Returns(new[] { ".docx" });
+        docxReader
+            .Setup(r => r.ReadTextAsync(It.IsAny<string>(), It.IsAny<DocumentReadOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DocumentContent("Word content", 1, false));
+
+        var tool = CreateToolWithReaders(docxReader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.docx");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var result = await tool.ExecuteAsync(new Dictionary<string, object> { ["action"] = "read", ["path"] = path });
+
+            result.IsError.Should().BeFalse();
+            docxReader.Verify(r => r.ReadTextAsync(It.IsAny<string>(), It.IsAny<DocumentReadOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Xlsx_RoutesToExcelReader()
+    {
+        // Argha - 2026-02-27 - .xlsx extension should route to the xlsx-capable reader
+        var xlsxReader = new Mock<IDocumentReader>();
+        xlsxReader.Setup(r => r.SupportedExtensions).Returns(new[] { ".xlsx" });
+        xlsxReader
+            .Setup(r => r.ReadTextAsync(It.IsAny<string>(), It.IsAny<DocumentReadOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DocumentContent("Excel content", 1, false));
+
+        var tool = CreateToolWithReaders(xlsxReader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.xlsx");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var result = await tool.ExecuteAsync(new Dictionary<string, object> { ["action"] = "read", ["path"] = path });
+
+            result.IsError.Should().BeFalse();
+            xlsxReader.Verify(r => r.ReadTextAsync(It.IsAny<string>(), It.IsAny<DocumentReadOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Pptx_RoutesToPowerPointReader()
+    {
+        // Argha - 2026-02-27 - .pptx extension should route to the pptx-capable reader
+        var pptxReader = new Mock<IDocumentReader>();
+        pptxReader.Setup(r => r.SupportedExtensions).Returns(new[] { ".pptx" });
+        pptxReader
+            .Setup(r => r.ReadTextAsync(It.IsAny<string>(), It.IsAny<DocumentReadOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DocumentContent("PowerPoint content", 1, false));
+
+        var tool = CreateToolWithReaders(pptxReader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.pptx");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var result = await tool.ExecuteAsync(new Dictionary<string, object> { ["action"] = "read", ["path"] = path });
+
+            result.IsError.Should().BeFalse();
+            pptxReader.Verify(r => r.ReadTextAsync(It.IsAny<string>(), It.IsAny<DocumentReadOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListSheets_UnsupportedFormat_ReturnsError()
+    {
+        // Argha - 2026-02-27 - list_sheets on a PDF (no reader supports list_sheets) → "No sheets found"
+        // Actually the tool routes to the reader and calls ListSheetsAsync which defaults to empty
+        var pdfReader = new Mock<IDocumentReader>();
+        pdfReader.Setup(r => r.SupportedExtensions).Returns(new[] { ".pdf" });
+        pdfReader
+            .Setup(r => r.ListSheetsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<WorksheetSummary>());
+
+        var tool = CreateToolWithReaders(pdfReader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.pdf");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var args = new Dictionary<string, object> { ["action"] = "list_sheets", ["path"] = path };
+            var result = await tool.ExecuteAsync(args);
+
+            result.IsError.Should().BeFalse();
+            result.Content[0].Text.Should().Contain("No sheets found");
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+}
+
+// ============================================================
 // PdfDocumentReader unit tests (no file I/O)
 // ============================================================
 public class PdfDocumentReaderParseTests

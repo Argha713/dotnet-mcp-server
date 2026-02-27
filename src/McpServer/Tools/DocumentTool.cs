@@ -44,7 +44,7 @@ public class DocumentTool : ITool
             {
                 Type = "string",
                 Description = "Action to perform",
-                Enum = new List<string> { "read", "info", "search" }
+                Enum = new List<string> { "read", "info", "search", "list_sheets" }
             },
             ["path"] = new()
             {
@@ -54,7 +54,12 @@ public class DocumentTool : ITool
             ["pages"] = new()
             {
                 Type = "string",
-                Description = "PDF only: page range to read, e.g. '1-5' or '3'. Default: all pages."
+                Description = "PDF/PowerPoint: page or slide range to read, e.g. '1-5' or '3'. Default: all pages."
+            },
+            ["sheet"] = new()
+            {
+                Type = "string",
+                Description = "Excel: worksheet name to read; omit for first sheet."
             },
             ["query"] = new()
             {
@@ -116,7 +121,9 @@ public class DocumentTool : ITool
                 "read" => await ExecuteReadAsync(reader, fullPath, arguments, cancellationToken),
                 "info" => await ExecuteInfoAsync(reader, fullPath, fileInfo, cancellationToken),
                 "search" => await ExecuteSearchAsync(reader, fullPath, arguments, cancellationToken),
-                _ => $"Unknown action '{action}'. Use 'read', 'info', or 'search'."
+                // Argha - 2026-02-27 - Phase 8.2: list_sheets action for Excel workbooks
+                "list_sheets" => await ExecuteListSheetsAsync(reader, fullPath, cancellationToken),
+                _ => $"Unknown action '{action}'. Use 'read', 'info', 'search', or 'list_sheets'."
             };
 
             return Ok(text);
@@ -137,8 +144,10 @@ public class DocumentTool : ITool
         Dictionary<string, object>? arguments, CancellationToken ct)
     {
         var options = new DocumentReadOptions(
+            Sheet: GetStringArg(arguments, "sheet"),
             PageRange: GetStringArg(arguments, "pages"),
-            MaxCharsOutput: _docSettings.MaxOutputChars);
+            MaxCharsOutput: _docSettings.MaxOutputChars,
+            MaxRows: _docSettings.MaxExcelRows);
 
         var content = await reader.ReadTextAsync(path, options, ct);
 
@@ -198,6 +207,27 @@ public class DocumentTool : ITool
         {
             sb.AppendLine($"  Page {match.Page}: {match.Context}");
         }
+
+        return sb.ToString().TrimEnd();
+    }
+
+    // Argha - 2026-02-27 - list_sheets: list all worksheets with row/column dimensions (Excel only)
+    private static async Task<string> ExecuteListSheetsAsync(
+        IDocumentReader reader, string path, CancellationToken ct)
+    {
+        var sheets = (await reader.ListSheetsAsync(path, ct)).ToList();
+
+        if (sheets.Count == 0)
+            return $"No sheets found in {Path.GetFileName(path)}.";
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"Sheets in {Path.GetFileName(path)}:");
+        sb.AppendLine();
+        sb.AppendLine($"{"Name",-30} {"Rows",8} {"Columns",8}");
+        sb.AppendLine(new string('-', 50));
+
+        foreach (var sheet in sheets)
+            sb.AppendLine($"{sheet.Name,-30} {sheet.RowCount,8} {sheet.ColumnCount,8}");
 
         return sb.ToString().TrimEnd();
     }

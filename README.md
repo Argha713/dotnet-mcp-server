@@ -903,7 +903,7 @@ dotnet run 2> log.txt
 <summary><h3>Phase 8 — Document Processing Tool</h3></summary>
 
 - [x] 8.1 — PDF reading (text extraction, metadata, search) via PdfPig
-- [ ] 8.2 — Office documents (Word .docx, Excel .xlsx, PowerPoint .pptx) via OpenXml + ClosedXML
+- [x] 8.2 — Office documents (Word .docx, Excel .xlsx, PowerPoint .pptx) via OpenXml + ClosedXML
 - [ ] 8.3 — Table extraction (Word + PDF), Excel sheet listing with row/col counts, progress reporting
 
 </details>

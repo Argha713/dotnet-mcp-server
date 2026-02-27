@@ -111,6 +111,10 @@ services.AddSingleton<ITool, SystemInfoTool>();
 services.AddSingleton<ITool, GitTool>();
 // Argha - 2026-02-26 - Phase 8: document processing tool + readers
 services.AddSingleton<IDocumentReader, PdfDocumentReader>();
+// Argha - 2026-02-27 - Phase 8.2: Office document readers (Word, Excel, PowerPoint)
+services.AddSingleton<IDocumentReader, WordDocumentReader>();
+services.AddSingleton<IDocumentReader, ExcelDocumentReader>();
+services.AddSingleton<IDocumentReader, PowerPointDocumentReader>();
 services.AddSingleton<ITool, DocumentTool>();
 
 // Argha - 2026-02-24 - load plugin tools from the configured plugins directory.

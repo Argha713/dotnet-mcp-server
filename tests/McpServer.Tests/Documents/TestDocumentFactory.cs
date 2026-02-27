@@ -1,6 +1,13 @@
 // Argha - 2026-02-26 - Phase 8.1: programmatic minimal document factory for tests
+// Argha - 2026-02-27 - Phase 8.2: added Word, Excel, PowerPoint factory methods
 
 using System.Text;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Presentation;
+using A = DocumentFormat.OpenXml.Drawing;
+using W = DocumentFormat.OpenXml.Wordprocessing;
 
 namespace McpServer.Tests.Documents;
 
@@ -73,6 +80,140 @@ public static class TestDocumentFactory
     {
         var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, CreateMinimalPdf(pageText));
+        return path;
+    }
+
+    /// <summary>
+    /// Creates a minimal .docx file and returns the path.
+    /// Caller is responsible for deleting the file.
+    /// </summary>
+    public static string WriteTempDocx(string text = "Hello Word Document")
+    {
+        // Argha - 2026-02-27 - use OpenXml SDK to create a structurally valid .docx
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.docx");
+        using var doc = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
+        var mainPart = doc.AddMainDocumentPart();
+        mainPart.Document = new W.Document(
+            new W.Body(
+                new W.Paragraph(
+                    new W.Run(
+                        new W.Text(text)))));
+        mainPart.Document.Save();
+        return path;
+    }
+
+    /// <summary>
+    /// Creates a minimal .xlsx file with one (or more) sheets and returns the path.
+    /// Caller is responsible for deleting the file.
+    /// </summary>
+    public static string WriteTempXlsx(string sheetName = "Sheet1", string cellValue = "Hello Excel")
+    {
+        // Argha - 2026-02-27 - use ClosedXML to create a valid workbook with predictable content
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.xlsx");
+        using var workbook = new XLWorkbook();
+        var ws = workbook.Worksheets.Add(sheetName);
+        ws.Cell(1, 1).Value = cellValue;
+        ws.Cell(1, 2).Value = "Second Cell";
+        ws.Cell(2, 1).Value = "Row 2 Data";
+        workbook.SaveAs(path);
+        return path;
+    }
+
+    /// <summary>
+    /// Creates a minimal .pptx file with one slide per element in <paramref name="slideTexts"/>.
+    /// Pass no arguments to get a single slide with "Hello PowerPoint".
+    /// Caller is responsible for deleting the file.
+    /// </summary>
+    public static string WriteTempPptx(params string[] slideTexts)
+    {
+        // Argha - 2026-02-27 - use OpenXml SDK to create a structurally valid .pptx
+        if (slideTexts.Length == 0) slideTexts = new[] { "Hello PowerPoint" };
+
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.pptx");
+
+        using var ppt = PresentationDocument.Create(path, PresentationDocumentType.Presentation);
+        var presentationPart = ppt.AddPresentationPart();
+
+        // Argha - 2026-02-27 - minimal slide master required by the OOXML spec
+        var slideMasterPart = presentationPart.AddNewPart<SlideMasterPart>("rId1");
+        var slideLayoutPart = slideMasterPart.AddNewPart<SlideLayoutPart>("rId1");
+        slideLayoutPart.SlideLayout = new SlideLayout(
+            new CommonSlideData(new ShapeTree(
+                new NonVisualGroupShapeProperties(
+                    new NonVisualDrawingProperties { Id = 1U, Name = "" },
+                    new NonVisualGroupShapeDrawingProperties(),
+                    new ApplicationNonVisualDrawingProperties()),
+                new GroupShapeProperties(new A.TransformGroup()))));
+        slideLayoutPart.SlideLayout.Save();
+
+        slideMasterPart.SlideMaster = new SlideMaster(
+            new CommonSlideData(new ShapeTree(
+                new NonVisualGroupShapeProperties(
+                    new NonVisualDrawingProperties { Id = 1U, Name = "" },
+                    new NonVisualGroupShapeDrawingProperties(),
+                    new ApplicationNonVisualDrawingProperties()),
+                new GroupShapeProperties(new A.TransformGroup()))),
+            new ColorMap
+            {
+                Background1 = A.ColorSchemeIndexValues.Light1,
+                Text1 = A.ColorSchemeIndexValues.Dark1,
+                Background2 = A.ColorSchemeIndexValues.Light2,
+                Text2 = A.ColorSchemeIndexValues.Dark2,
+                Accent1 = A.ColorSchemeIndexValues.Accent1,
+                Accent2 = A.ColorSchemeIndexValues.Accent2,
+                Accent3 = A.ColorSchemeIndexValues.Accent3,
+                Accent4 = A.ColorSchemeIndexValues.Accent4,
+                Accent5 = A.ColorSchemeIndexValues.Accent5,
+                Accent6 = A.ColorSchemeIndexValues.Accent6,
+                Hyperlink = A.ColorSchemeIndexValues.Hyperlink,
+                FollowedHyperlink = A.ColorSchemeIndexValues.FollowedHyperlink
+            },
+            new SlideLayoutIdList(
+                new SlideLayoutId { Id = 2049U, RelationshipId = "rId1" }));
+        slideMasterPart.SlideMaster.Save();
+
+        // Argha - 2026-02-27 - create one SlidePart per provided text
+        var slideIdItems = new List<SlideId>();
+        for (int i = 0; i < slideTexts.Length; i++)
+        {
+            string relId = $"rId{i + 2}";
+            var slidePart = presentationPart.AddNewPart<SlidePart>(relId);
+            slidePart.AddPart(slideLayoutPart, "rId1");
+
+            slidePart.Slide = new Slide(
+                new CommonSlideData(
+                    new ShapeTree(
+                        new NonVisualGroupShapeProperties(
+                            new NonVisualDrawingProperties { Id = 1U, Name = "" },
+                            new NonVisualGroupShapeDrawingProperties(),
+                            new ApplicationNonVisualDrawingProperties()),
+                        new GroupShapeProperties(new A.TransformGroup()),
+                        new Shape(
+                            new NonVisualShapeProperties(
+                                new NonVisualDrawingProperties { Id = 2U, Name = $"Title {i + 1}" },
+                                new NonVisualShapeDrawingProperties(
+                                    new A.ShapeLocks { NoGrouping = true }),
+                                new ApplicationNonVisualDrawingProperties(new PlaceholderShape())),
+                            new ShapeProperties(),
+                            new TextBody(
+                                new A.BodyProperties(),
+                                new A.ListStyle(),
+                                new A.Paragraph(
+                                    new A.Run(
+                                        new A.Text(slideTexts[i]))))))));
+            slidePart.Slide.Save();
+
+            slideIdItems.Add(new SlideId { Id = (uint)(256 + i), RelationshipId = relId });
+        }
+
+        presentationPart.Presentation = new Presentation(
+            new SlideMasterIdList(
+                new SlideMasterId { Id = 2147483648U, RelationshipId = "rId1" }),
+            new SlideIdList(slideIdItems.ToArray()),
+            new SlideSize { Cx = 9144000, Cy = 6858000, Type = SlideSizeValues.Custom },
+            new NotesSize { Cx = 6858000, Cy = 9144000 });
+        presentationPart.Presentation.Save();
+
         return path;
     }
 }
