@@ -70,11 +70,17 @@ public class DocumentToolTests
     [Fact]
     public async Task ExecuteAsync_PathOutsideAllowed_ReturnsAccessDenied()
     {
-        // Use a path outside the configured AllowedPaths (temp dir)
+        // Argha - 2026-02-27 - construct a cross-platform absolute path that is definitely outside temp.
+        // C:\Windows\... is Windows-only; on Linux Path.IsPathRooted returns false for drive-letter paths,
+        // causing the path to be resolved relative to temp and accidentally pass validation.
+        // Using ".." from temp ensures a rooted path that is outside the allowed dir on any OS.
+        var outsidePath = Path.GetFullPath(
+            Path.Combine(Path.GetTempPath(), "..", "not_allowed_dir", "something.pdf"));
+
         var args = new Dictionary<string, object>
         {
             ["action"] = "read",
-            ["path"] = @"C:\Windows\System32\something.pdf"
+            ["path"] = outsidePath
         };
 
         var result = await _tool.ExecuteAsync(args);
