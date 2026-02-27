@@ -98,9 +98,44 @@ public class WordDocumentReader : IDocumentReader
         }, ct);
     }
 
-    // Argha - 2026-02-27 - Phase 8.3: Word table extraction deferred
-    public Task<IEnumerable<DocumentTable>> ExtractTablesAsync(string path, CancellationToken ct) =>
-        Task.FromResult(Enumerable.Empty<DocumentTable>());
+    // Argha - 2026-02-27 - Phase 8.3: extract tables from Word documents using OpenXml Table elements
+    public async Task<IEnumerable<DocumentTable>> ExtractTablesAsync(string path, CancellationToken ct)
+    {
+        return await Task.Run(() =>
+        {
+            using var doc = WordprocessingDocument.Open(path, false);
+            var body = doc.MainDocumentPart!.Document.Body!;
+            var tables = new List<DocumentTable>();
+
+            foreach (var table in body.Descendants<Table>())
+            {
+                ct.ThrowIfCancellationRequested();
+
+                var rows = new List<List<string>>();
+                foreach (var row in table.Descendants<TableRow>())
+                {
+                    // Argha - 2026-02-27 - each cell may contain multiple paragraphs; join them with a space
+                    var cells = row.Descendants<TableCell>()
+                        .Select(cell =>
+                        {
+                            var paragraphs = cell.Descendants<Paragraph>()
+                                .Select(p => string.Concat(p.Descendants<Text>().Select(t => t.Text)))
+                                .Where(s => !string.IsNullOrEmpty(s));
+                            return string.Join(" ", paragraphs);
+                        })
+                        .ToList();
+
+                    if (cells.Count > 0)
+                        rows.Add(cells);
+                }
+
+                if (rows.Count > 0)
+                    tables.Add(new DocumentTable(null, rows));
+            }
+
+            return (IEnumerable<DocumentTable>)tables;
+        }, ct);
+    }
 
     public async Task<IEnumerable<DocumentSearchMatch>> SearchAsync(
         string path, string query, bool caseSensitive, CancellationToken ct)

@@ -1,8 +1,10 @@
 // Argha - 2026-02-26 - Phase 8.1: unit tests for DocumentTool and PdfDocumentReader
+// Argha - 2026-02-27 - Phase 8.3: added Phase83Tests (extract_tables, progress) and PdfTableExtractionTests
 
 using FluentAssertions;
 using McpServer.Configuration;
 using McpServer.Documents;
+using McpServer.Progress;
 using McpServer.Protocol;
 using McpServer.Tools;
 using Microsoft.Extensions.Options;
@@ -530,6 +532,196 @@ public class DocumentToolPhase82Tests
         {
             if (File.Exists(path)) File.Delete(path);
         }
+    }
+}
+
+// ============================================================
+// Phase 8.3: DocumentTool unit tests — extract_tables action + progress reporting
+// ============================================================
+public class DocumentToolPhase83Tests
+{
+    private static DocumentTool CreateToolWithReader(IDocumentReader reader)
+    {
+        var fsOptions = Options.Create(new FileSystemSettings
+        {
+            AllowedPaths = new List<string> { Path.GetTempPath() }
+        });
+        var docOptions = Options.Create(new DocumentSettings());
+        return new DocumentTool(fsOptions, docOptions, new[] { reader });
+    }
+
+    private sealed class TrackingProgressReporter : IProgressReporter
+    {
+        public List<(double Progress, double? Total)> Reports { get; } = new();
+        public void Report(double progress, double? total = null) => Reports.Add((progress, total));
+    }
+
+    [Fact]
+    public void InputSchema_ContainsExtractTablesAction()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: schema enum must include extract_tables
+        var reader = new Mock<IDocumentReader>();
+        reader.Setup(r => r.SupportedExtensions).Returns(new[] { ".pdf" });
+        var tool = CreateToolWithReader(reader.Object);
+
+        tool.InputSchema.Properties["action"].Enum.Should().Contain("extract_tables");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ExtractTables_NoTables_ReturnsNoTablesMessage()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: reader returns empty → tool reports "No tables found"
+        var reader = new Mock<IDocumentReader>();
+        reader.Setup(r => r.SupportedExtensions).Returns(new[] { ".pdf" });
+        reader
+            .Setup(r => r.ExtractTablesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<DocumentTable>());
+
+        var tool = CreateToolWithReader(reader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.pdf");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var result = await tool.ExecuteAsync(
+                new Dictionary<string, object> { ["action"] = "extract_tables", ["path"] = path });
+
+            result.IsError.Should().BeFalse();
+            result.Content[0].Text.Should().Contain("No tables found");
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ExtractTables_ReturnsTables()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: reader returns one 2×2 table → tool formats it
+        var reader = new Mock<IDocumentReader>();
+        reader.Setup(r => r.SupportedExtensions).Returns(new[] { ".pdf" });
+        reader
+            .Setup(r => r.ExtractTablesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new DocumentTable(null, new List<List<string>>
+                {
+                    new() { "Name", "Age" },
+                    new() { "Alice", "30" }
+                })
+            });
+
+        var tool = CreateToolWithReader(reader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.pdf");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var result = await tool.ExecuteAsync(
+                new Dictionary<string, object> { ["action"] = "extract_tables", ["path"] = path });
+
+            result.IsError.Should().BeFalse();
+            result.Content[0].Text.Should().Contain("1 table");
+            result.Content[0].Text.Should().Contain("Name");
+            result.Content[0].Text.Should().Contain("Alice");
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Read_ReportsProgress()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: progress reporter should receive 0 then 100
+        var reader = new Mock<IDocumentReader>();
+        reader.Setup(r => r.SupportedExtensions).Returns(new[] { ".pdf" });
+        reader
+            .Setup(r => r.ReadTextAsync(It.IsAny<string>(), It.IsAny<DocumentReadOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DocumentContent("text", 1, false));
+
+        var tool = CreateToolWithReader(reader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.pdf");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var tracker = new TrackingProgressReporter();
+            await tool.ExecuteAsync(
+                new Dictionary<string, object> { ["action"] = "read", ["path"] = path },
+                tracker);
+
+            tracker.Reports.Should().HaveCountGreaterThanOrEqualTo(2);
+            tracker.Reports.First().Progress.Should().Be(0);
+            tracker.Reports.Last().Progress.Should().Be(100);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ExtractTables_ReportsProgress()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: progress reporter should receive 0 then 100 for extract_tables
+        var reader = new Mock<IDocumentReader>();
+        reader.Setup(r => r.SupportedExtensions).Returns(new[] { ".pdf" });
+        reader
+            .Setup(r => r.ExtractTablesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<DocumentTable>());
+
+        var tool = CreateToolWithReader(reader.Object);
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.pdf");
+        await File.WriteAllTextAsync(path, "dummy");
+
+        try
+        {
+            var tracker = new TrackingProgressReporter();
+            await tool.ExecuteAsync(
+                new Dictionary<string, object> { ["action"] = "extract_tables", ["path"] = path },
+                tracker);
+
+            tracker.Reports.Should().HaveCountGreaterThanOrEqualTo(2);
+            tracker.Reports.First().Progress.Should().Be(0);
+            tracker.Reports.Last().Progress.Should().Be(100);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+}
+
+// ============================================================
+// Phase 8.3: PdfDocumentReader table extraction integration tests
+// ============================================================
+public class PdfDocumentReaderTableExtractionTests : IDisposable
+{
+    private readonly string _pdfPath;
+    private readonly PdfDocumentReader _reader;
+
+    public PdfDocumentReaderTableExtractionTests()
+    {
+        _pdfPath = TestDocumentFactory.WriteTempPdfWithTable();
+        _reader = new PdfDocumentReader();
+    }
+
+    public void Dispose()
+    {
+        if (File.Exists(_pdfPath)) File.Delete(_pdfPath);
+    }
+
+    [Fact]
+    public async Task ExtractTablesAsync_PdfWithTable_ReturnsOneTable()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: two rows × two X-aligned columns → one detected table
+        var tables = (await _reader.ExtractTablesAsync(_pdfPath, CancellationToken.None)).ToList();
+
+        tables.Should().HaveCount(1);
+        tables[0].Rows.Should().HaveCount(2);
     }
 }
 

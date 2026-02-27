@@ -44,7 +44,7 @@ public class DocumentTool : ITool
             {
                 Type = "string",
                 Description = "Action to perform",
-                Enum = new List<string> { "read", "info", "search", "list_sheets" }
+                Enum = new List<string> { "read", "info", "search", "list_sheets", "extract_tables" }
             },
             ["path"] = new()
             {
@@ -116,6 +116,9 @@ public class DocumentTool : ITool
                 return Error($"Unsupported file format '{ext}'. Supported formats: {string.Join(", ", supported)}.");
             }
 
+            // Argha - 2026-02-27 - Phase 8.3: report progress start before dispatching to action handler
+            progress?.Report(0, 100);
+
             var text = action switch
             {
                 "read" => await ExecuteReadAsync(reader, fullPath, arguments, cancellationToken),
@@ -123,8 +126,13 @@ public class DocumentTool : ITool
                 "search" => await ExecuteSearchAsync(reader, fullPath, arguments, cancellationToken),
                 // Argha - 2026-02-27 - Phase 8.2: list_sheets action for Excel workbooks
                 "list_sheets" => await ExecuteListSheetsAsync(reader, fullPath, cancellationToken),
-                _ => $"Unknown action '{action}'. Use 'read', 'info', 'search', or 'list_sheets'."
+                // Argha - 2026-02-27 - Phase 8.3: extract_tables action for Word and PDF
+                "extract_tables" => await ExecuteExtractTablesAsync(reader, fullPath, cancellationToken),
+                _ => $"Unknown action '{action}'. Use 'read', 'info', 'search', 'list_sheets', or 'extract_tables'."
             };
+
+            // Argha - 2026-02-27 - Phase 8.3: report progress complete
+            progress?.Report(100, 100);
 
             return Ok(text);
         }
@@ -230,6 +238,52 @@ public class DocumentTool : ITool
             sb.AppendLine($"{sheet.Name,-30} {sheet.RowCount,8} {sheet.ColumnCount,8}");
 
         return sb.ToString().TrimEnd();
+    }
+
+    // Argha - 2026-02-27 - Phase 8.3: extract_tables — extract tables from Word and PDF documents
+    private static async Task<string> ExecuteExtractTablesAsync(
+        IDocumentReader reader, string path, CancellationToken ct)
+    {
+        var tables = (await reader.ExtractTablesAsync(path, ct)).ToList();
+
+        if (tables.Count == 0)
+            return $"No tables found in {Path.GetFileName(path)}.";
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"Found {tables.Count} table(s) in {Path.GetFileName(path)}.");
+
+        for (int i = 0; i < tables.Count; i++)
+        {
+            var table = tables[i];
+            int cols = table.Rows.Count > 0 ? table.Rows.Max(r => r.Count) : 0;
+            sb.AppendLine();
+            sb.AppendLine($"Table {i + 1} ({table.Rows.Count} rows × {cols} cols):");
+            sb.Append(FormatTable(table));
+        }
+
+        return sb.ToString().TrimEnd();
+    }
+
+    // Argha - 2026-02-27 - render a DocumentTable as aligned pipe-delimited text
+    private static string FormatTable(DocumentTable table)
+    {
+        if (table.Rows.Count == 0) return "  (empty)\n";
+
+        int colCount = table.Rows.Max(r => r.Count);
+        var colWidths = new int[colCount];
+        foreach (var row in table.Rows)
+            for (int c = 0; c < row.Count; c++)
+                colWidths[c] = Math.Max(colWidths[c], row[c].Length);
+
+        var sb = new StringBuilder();
+        foreach (var row in table.Rows)
+        {
+            var cells = Enumerable.Range(0, colCount)
+                .Select(c => (c < row.Count ? row[c] : "").PadRight(colWidths[c]));
+            sb.AppendLine("  " + string.Join(" | ", cells));
+        }
+
+        return sb.ToString();
     }
 
     // Argha - 2026-02-26 - mirrors FileSystemTool.ResolvePath: absolute paths used as-is, relative resolved against AllowedPaths

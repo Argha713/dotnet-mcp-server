@@ -1,7 +1,9 @@
 // Argha - 2026-02-26 - Phase 8.1: PDF text extraction, metadata, and search via PdfPig
+// Argha - 2026-02-27 - Phase 8.3: heuristic table extraction using word bounding boxes
 
 using System.Text;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
 
 namespace McpServer.Documents;
 
@@ -90,9 +92,110 @@ public class PdfDocumentReader : IDocumentReader
         }, ct);
     }
 
-    // Argha - 2026-02-26 - Phase 8.3: PDF table extraction deferred to Phase 8.3
-    public Task<IEnumerable<DocumentTable>> ExtractTablesAsync(string path, CancellationToken ct) =>
-        Task.FromResult(Enumerable.Empty<DocumentTable>());
+    // Argha - 2026-02-27 - Phase 8.3: heuristic table detection from word bounding boxes
+    // Words separated by >CellGapThreshold pts horizontally = separate cells.
+    // Rows with ≥2 consistently X-aligned cells across ≥2 rows are emitted as a table.
+    public async Task<IEnumerable<DocumentTable>> ExtractTablesAsync(string path, CancellationToken ct)
+    {
+        return await Task.Run(() =>
+        {
+            using var doc = PdfDocument.Open(path);
+            var allTables = new List<DocumentTable>();
+
+            for (int pageNum = 1; pageNum <= doc.NumberOfPages; pageNum++)
+            {
+                ct.ThrowIfCancellationRequested();
+                var page = doc.GetPage(pageNum);
+                allTables.AddRange(DetectTablesOnPage(page));
+            }
+
+            return (IEnumerable<DocumentTable>)allTables;
+        }, ct);
+    }
+
+    // Argha - 2026-02-27 - detect grid-like text arrangements on a single PDF page.
+    // Words within rowTolerance pts in Y → same row; words separated by >cellGapThreshold pts in X → separate cells.
+    private static List<DocumentTable> DetectTablesOnPage(Page page)
+    {
+        const double rowTolerance = 8.0;
+        const double cellGapThreshold = 40.0;
+        const int minRows = 2;
+        const int minCols = 2;
+
+        var words = page.GetWords()
+            .OrderByDescending(w => w.BoundingBox.Bottom)
+            .ThenBy(w => w.BoundingBox.Left)
+            .ToList();
+
+        if (words.Count < minRows * minCols)
+            return new List<DocumentTable>();
+
+        // Step 1: group words into rows by Y coordinate proximity
+        // Each bucket stores the reference Y and a mutable list of word spans
+        var rowBuckets = new List<(double yRef, List<(double xStart, double xEnd, string text)> spans)>();
+        foreach (var word in words)
+        {
+            double y = word.BoundingBox.Bottom;
+            var bucket = rowBuckets.FirstOrDefault(b => Math.Abs(b.yRef - y) <= rowTolerance);
+            if (bucket.spans != null)
+            {
+                // Argha - 2026-02-27 - List<T> is a reference type; Add mutates the shared instance
+                bucket.spans.Add((word.BoundingBox.Left, word.BoundingBox.Right, word.Text));
+            }
+            else
+            {
+                rowBuckets.Add((y, new List<(double, double, string)>
+                    { (word.BoundingBox.Left, word.BoundingBox.Right, word.Text) }));
+            }
+        }
+
+        // Step 2: within each row, merge adjacent words into cells (large X gap → new cell)
+        var cellRows = rowBuckets.Select(bucket =>
+        {
+            var sorted = bucket.spans.OrderBy(w => w.xStart).ToList();
+            var cells = new List<(double xStart, string text)>();
+            var curText = sorted[0].text;
+            var curX = sorted[0].xStart;
+            var curRight = sorted[0].xEnd;
+
+            for (int i = 1; i < sorted.Count; i++)
+            {
+                double gap = sorted[i].xStart - curRight;
+                if (gap >= cellGapThreshold)
+                {
+                    cells.Add((curX, curText));
+                    curText = sorted[i].text;
+                    curX = sorted[i].xStart;
+                }
+                else
+                {
+                    curText += " " + sorted[i].text;
+                }
+                curRight = sorted[i].xEnd;
+            }
+            cells.Add((curX, curText));
+            return cells;
+        }).ToList();
+
+        // Step 3: keep only rows with ≥2 cells
+        var multiColRows = cellRows.Where(r => r.Count >= minCols).ToList();
+        if (multiColRows.Count < minRows) return new List<DocumentTable>();
+
+        // Step 4: require consistent column count across rows
+        int colCount = multiColRows[0].Count;
+        var alignedRows = multiColRows.Where(r => r.Count == colCount).ToList();
+        if (alignedRows.Count < minRows) return new List<DocumentTable>();
+
+        // Step 5: verify column X alignment (first row is reference; ±20pt tolerance)
+        var refX = alignedRows[0].Select(c => c.xStart).ToList();
+        bool wellAligned = alignedRows.All(row =>
+            row.Select(c => c.xStart).Zip(refX).All(pair => Math.Abs(pair.First - pair.Second) <= 20.0));
+
+        if (!wellAligned) return new List<DocumentTable>();
+
+        var tableRows = alignedRows.Select(row => row.Select(c => c.text).ToList()).ToList();
+        return new List<DocumentTable> { new DocumentTable(null, tableRows) };
+    }
 
     public async Task<IEnumerable<DocumentSearchMatch>> SearchAsync(
         string path, string query, bool caseSensitive, CancellationToken ct)

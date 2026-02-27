@@ -1,5 +1,6 @@
 // Argha - 2026-02-26 - Phase 8.1: programmatic minimal document factory for tests
 // Argha - 2026-02-27 - Phase 8.2: added Word, Excel, PowerPoint factory methods
+// Argha - 2026-02-27 - Phase 8.3: added WriteTempDocxWithTable and WriteTempPdfWithTable
 
 using System.Text;
 using ClosedXML.Excel;
@@ -28,48 +29,8 @@ public static class TestDocumentFactory
             .Replace("(", "\\(")
             .Replace(")", "\\)");
 
-        var streamContent = $"BT /F1 12 Tf 50 750 Td ({escapedText}) Tj ET";
-        int streamLength = Encoding.Latin1.GetByteCount(streamContent);
-
-        // Argha - 2026-02-26 - build each object as a complete string; offsets computed dynamically
-        var obj1 = "1 0 obj\n<</Type /Catalog /Pages 2 0 R>>\nendobj\n";
-        var obj2 = "2 0 obj\n<</Type /Pages /Kids [3 0 R] /Count 1>>\nendobj\n";
-        var obj3 = "3 0 obj\n<</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources <</Font <</F1 5 0 R>>>>>>\nendobj\n";
-        var obj4 = $"4 0 obj\n<</Length {streamLength}>>\nstream\n{streamContent}\nendstream\nendobj\n";
-        var obj5 = "5 0 obj\n<</Type /Font /Subtype /Type1 /BaseFont /Helvetica>>\nendobj\n";
-
-        var allObjects = new[] { obj1, obj2, obj3, obj4, obj5 };
-        var header = "%PDF-1.4\n";
-
-        // Compute byte offset of each object
-        var objOffsets = new long[5];
-        long offset = Encoding.Latin1.GetByteCount(header);
-        for (int i = 0; i < allObjects.Length; i++)
-        {
-            objOffsets[i] = offset;
-            offset += Encoding.Latin1.GetByteCount(allObjects[i]);
-        }
-
-        long xrefOffset = offset;
-
-        // Build xref table — each entry is exactly 20 bytes (10 digit offset + space + 5 digit gen + space + 'f'/'n' + space + LF)
-        var xref = new StringBuilder();
-        xref.Append("xref\n");
-        xref.Append("0 6\n");
-        xref.Append("0000000000 65535 f \n");
-        for (int i = 0; i < 5; i++)
-            xref.Append($"{objOffsets[i]:D10} 00000 n \n");
-
-        var trailer = $"trailer\n<</Size 6 /Root 1 0 R>>\nstartxref\n{xrefOffset}\n%%EOF\n";
-
-        var result = new StringBuilder();
-        result.Append(header);
-        foreach (var obj in allObjects)
-            result.Append(obj);
-        result.Append(xref);
-        result.Append(trailer);
-
-        return Encoding.Latin1.GetBytes(result.ToString());
+        // Argha - 2026-02-27 - Phase 8.3: delegate to shared BuildPdf helper
+        return BuildPdf($"BT /F1 12 Tf 50 750 Td ({escapedText}) Tj ET");
     }
 
     /// <summary>
@@ -117,6 +78,94 @@ public static class TestDocumentFactory
         ws.Cell(2, 1).Value = "Row 2 Data";
         workbook.SaveAs(path);
         return path;
+    }
+
+    /// <summary>
+    /// Creates a .docx file containing a simple 2-row × 2-column table.
+    /// Row 0: ["Name", "Age"]; Row 1: ["Alice", "30"].
+    /// Caller is responsible for deleting the file.
+    /// </summary>
+    public static string WriteTempDocxWithTable()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: use OpenXml SDK to create a .docx with a real table element
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.docx");
+        using var doc = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
+        var mainPart = doc.AddMainDocumentPart();
+        mainPart.Document = new W.Document(
+            new W.Body(
+                new W.Table(
+                    new W.TableProperties(),
+                    new W.TableRow(
+                        new W.TableCell(new W.Paragraph(new W.Run(new W.Text("Name")))),
+                        new W.TableCell(new W.Paragraph(new W.Run(new W.Text("Age"))))),
+                    new W.TableRow(
+                        new W.TableCell(new W.Paragraph(new W.Run(new W.Text("Alice")))),
+                        new W.TableCell(new W.Paragraph(new W.Run(new W.Text("30"))))))));
+        mainPart.Document.Save();
+        return path;
+    }
+
+    /// <summary>
+    /// Creates a PDF with a 2×2 table layout using absolute text positioning (Tm operator).
+    /// Row 0: ["Name", "Age"] at Y=750; Row 1: ["Alice", "30"] at Y=730.
+    /// X positions: col 0 = 50pt, col 1 = 200pt (150pt gap → detected as separate cells).
+    /// Caller is responsible for deleting the file.
+    /// </summary>
+    public static string WriteTempPdfWithTable()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: Tm sets absolute text position; each word is a distinct Word in PdfPig
+        var streamContent =
+            "BT /F1 12 Tf " +
+            "1 0 0 1 50 750 Tm (Name) Tj " +
+            "1 0 0 1 200 750 Tm (Age) Tj " +
+            "1 0 0 1 50 730 Tm (Alice) Tj " +
+            "1 0 0 1 200 730 Tm (30) Tj " +
+            "ET";
+        var path = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, BuildPdf(streamContent));
+        return path;
+    }
+
+    // Argha - 2026-02-27 - shared helper: wraps arbitrary stream content into a single-page PDF
+    private static byte[] BuildPdf(string streamContent)
+    {
+        int streamLength = Encoding.Latin1.GetByteCount(streamContent);
+
+        var obj1 = "1 0 obj\n<</Type /Catalog /Pages 2 0 R>>\nendobj\n";
+        var obj2 = "2 0 obj\n<</Type /Pages /Kids [3 0 R] /Count 1>>\nendobj\n";
+        var obj3 = "3 0 obj\n<</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources <</Font <</F1 5 0 R>>>>>>\nendobj\n";
+        var obj4 = $"4 0 obj\n<</Length {streamLength}>>\nstream\n{streamContent}\nendstream\nendobj\n";
+        var obj5 = "5 0 obj\n<</Type /Font /Subtype /Type1 /BaseFont /Helvetica>>\nendobj\n";
+
+        var allObjects = new[] { obj1, obj2, obj3, obj4, obj5 };
+        var header = "%PDF-1.4\n";
+
+        var objOffsets = new long[5];
+        long offset = Encoding.Latin1.GetByteCount(header);
+        for (int i = 0; i < allObjects.Length; i++)
+        {
+            objOffsets[i] = offset;
+            offset += Encoding.Latin1.GetByteCount(allObjects[i]);
+        }
+        long xrefOffset = offset;
+
+        var xref = new StringBuilder();
+        xref.Append("xref\n");
+        xref.Append("0 6\n");
+        xref.Append("0000000000 65535 f \n");
+        for (int i = 0; i < 5; i++)
+            xref.Append($"{objOffsets[i]:D10} 00000 n \n");
+
+        var trailer = $"trailer\n<</Size 6 /Root 1 0 R>>\nstartxref\n{xrefOffset}\n%%EOF\n";
+
+        var result = new StringBuilder();
+        result.Append(header);
+        foreach (var obj in allObjects)
+            result.Append(obj);
+        result.Append(xref);
+        result.Append(trailer);
+
+        return Encoding.Latin1.GetBytes(result.ToString());
     }
 
     /// <summary>

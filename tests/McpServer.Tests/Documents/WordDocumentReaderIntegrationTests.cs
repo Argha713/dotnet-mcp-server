@@ -84,11 +84,53 @@ public class WordDocumentReaderIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task ExtractTablesAsync_ReturnsEmpty()
+    public async Task ExtractTablesAsync_NoTableInDocument_ReturnsEmpty()
     {
-        // Argha - 2026-02-27 - table extraction is deferred to Phase 8.3
+        // Argha - 2026-02-27 - Phase 8.3: plain-text docx has no Table elements → empty result
         var tables = (await _reader.ExtractTablesAsync(_docxPath, CancellationToken.None)).ToList();
 
         tables.Should().BeEmpty();
+    }
+}
+
+// ============================================================
+// Phase 8.3: integration tests for Word table extraction
+// ============================================================
+public class WordDocumentReaderTableExtractionTests : IDisposable
+{
+    private readonly string _docxPath;
+    private readonly WordDocumentReader _reader;
+
+    public WordDocumentReaderTableExtractionTests()
+    {
+        _docxPath = TestDocumentFactory.WriteTempDocxWithTable();
+        _reader = new WordDocumentReader();
+    }
+
+    public void Dispose()
+    {
+        if (File.Exists(_docxPath)) File.Delete(_docxPath);
+    }
+
+    [Fact]
+    public async Task ExtractTablesAsync_DocxWithTable_ReturnsOneTable()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: the factory creates exactly one 2×2 table
+        var tables = (await _reader.ExtractTablesAsync(_docxPath, CancellationToken.None)).ToList();
+
+        tables.Should().HaveCount(1);
+        tables[0].Rows.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task ExtractTablesAsync_DocxWithTable_CellContentIsCorrect()
+    {
+        // Argha - 2026-02-27 - Phase 8.3: verify header row and data row cell values
+        var tables = (await _reader.ExtractTablesAsync(_docxPath, CancellationToken.None)).ToList();
+
+        tables.Should().HaveCount(1);
+        var rows = tables[0].Rows;
+        rows[0].Should().ContainInOrder("Name", "Age");
+        rows[1].Should().ContainInOrder("Alice", "30");
     }
 }
